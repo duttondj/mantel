@@ -1,0 +1,37 @@
+# Cloudflare Tunnel overlay for Mantel.
+#
+# Use this ON TOP OF the base docker-compose.yml to expose Mantel to the
+# internet via a Cloudflare Tunnel — no router port-forwarding, no exposed
+# home IP, HTTPS handled by Cloudflare.
+#
+# Run with BOTH files:
+#   docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build
+#
+# What it changes vs. the base file:
+#   - adds the `cloudflared` container (the tunnel connector)
+#   - removes the app's published host port (Cloudflare reaches it
+#     internally; nothing needs to listen on the host)
+#
+# Requires in .env:
+#   CLOUDFLARE_TUNNEL_TOKEN=...   (the token from the Cloudflare dashboard)
+#   APP_URL=https://your.domain   (your real https hostname)
+
+services:
+  app:
+    # Override the base file's published port: with the tunnel, the app
+    # does NOT need to be reachable on the host at all. An empty ports
+    # list replaces the base file's '13000:3000'.
+    ports: []
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      # token from Cloudflare dashboard (Networks -> Tunnels). Keep it in
+      # .env, never commit it — it grants access to route to your tunnel.
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - app
+    restart: unless-stopped
+    # cloudflared shares the default network with `app`, so it can reach
+    # the app at http://app:3000 (the container name + internal port).
