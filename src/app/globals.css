@@ -758,3 +758,145 @@ a { color: inherit; }
   margin: 0.2rem 0 0.4rem;
 }
 .post__msg-chars--low { color: var(--rose-deep); }
+
+/* ------------------------------------------------------------------ *
+ *  SITE FOOTER
+ * ------------------------------------------------------------------ */
+
+.site-footer {
+  text-align: center;
+  padding: 2rem 1.25rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.site-footer__sep { color: var(--line); }
+.site-footer__link { color: var(--ink-soft); text-decoration: none; }
+.site-footer__link:hover { color: var(--rose-deep); text-decoration: underline; }
+
+/* ------------------------------------------------------------------ *
+ *  LANDING PAGE — steps + features
+ * ------------------------------------------------------------------ */
+
+.home-section {
+  margin: 3.5rem 0;
+  border-top: 1px solid var(--line);
+  padding-top: 2.5rem;
+}
+.home-section__title {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  margin: 0 0 2rem;
+  text-align: center;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+.step__n {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 2rem;
+  color: var(--rose);
+  line-height: 1;
+}
+.step__h {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 0;
+}
+.step__p {
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+.feature {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 1.3rem 1.4rem;
+}
+.feature__h {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0 0 0.5rem;
+}
+.feature__p {
+  color: var(--ink-soft);
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.55;
+}
+
+/* ------------------------------------------------------------------ *
+ *  PRIVACY POLICY PAGE
+ * ------------------------------------------------------------------ */
+
+.privacy {
+  max-width: 680px;
+  margin: 3rem auto;
+}
+.privacy__title {
+  font-family: var(--display);
+  font-weight: 900;
+  font-size: 2.2rem;
+  margin: 0 0 0.3rem;
+}
+.privacy__date {
+  color: var(--ink-soft);
+  font-size: 0.85rem;
+  margin: 0 0 2rem;
+}
+.privacy h2 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  margin: 2rem 0 0.5rem;
+}
+.privacy h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 1.2rem 0 0.4rem;
+  color: var(--ink);
+}
+.privacy p, .privacy li {
+  color: var(--ink-soft);
+  line-height: 1.65;
+  font-size: 0.95rem;
+}
+.privacy ul { padding-left: 1.4rem; margin: 0.4rem 0 0; }
+.privacy li { margin-bottom: 0.5rem; }
+.privacy a { color: var(--rose-deep); }
+.privacy__back { margin-top: 2.5rem; }
+
+/* privacy note inside upload modal */
+.upload-privacy {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  margin: 0.6rem 0 0;
+  line-height: 1.4;
+}
+.upload-privacy a { color: var(--rose-deep); }

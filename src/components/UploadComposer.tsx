@@ -224,6 +224,12 @@ export function UploadComposer({ slug }: { slug: string }) {
 
             {error && <p className="err">{error}</p>}
 
+            <p className="upload-privacy">
+              Photos are stored privately for this gallery. GPS and location data are
+              removed automatically.{' '}
+              <a href="/privacy" target="_blank" rel="noreferrer">Privacy policy</a>
+            </p>
+
             <div className="modal__row">
               <button className="btn btn--ghost btn--sm" onClick={close} disabled={busy}>
                 Cancel

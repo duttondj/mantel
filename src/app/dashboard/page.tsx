@@ -18,9 +18,12 @@ export default async function DashboardPage() {
       plan: userTable.plan,
       status: userTable.status,
       expiresAt: userTable.expiresAt,
+      isAdmin: userTable.isAdmin,
     })
     .from(userTable)
     .where(eq(userTable.id, session.user.id));
+
+  if (me?.isAdmin) redirect('/admin');
 
   const active = me ? isEntitled(me) : false;
 

@@ -12,6 +12,7 @@ import { DeletePostButton } from '@/components/DeletePostButton';
 import { PostCarousel } from '@/components/PostCarousel';
 import { EditMessageButton } from '@/components/EditMessageButton';
 import { UnlockForm } from './UnlockForm';
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export default async function GalleryPage({
@@ -128,6 +129,7 @@ export default async function GalleryPage({
   }
 
   return (
+    <>
     <div className="wrap">
       <header className="masthead">
         <p className="masthead__eyebrow">A shared album</p>
@@ -168,5 +170,10 @@ export default async function GalleryPage({
         </div>
       )}
     </div>
+
+      <footer className="site-footer">
+        <Link href="/privacy" className="site-footer__link">Privacy policy</Link>
+      </footer>
+    </>
   );
 }

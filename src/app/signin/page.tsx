@@ -130,6 +130,13 @@ export default function SignInPage() {
         </button>
         {error && <p className="err">{error}</p>}
 
+        {mode === 'signup' && (
+          <p className="switch" style={{ fontSize: '0.8rem', marginTop: '0.6rem' }}>
+            By creating an account you agree to our{' '}
+            <Link href="/privacy">Privacy policy</Link>.
+          </p>
+        )}
+
         {mode === 'signin' && (
           <p className="switch">
             <Link href="/forgot-password" className="linkbtn">
