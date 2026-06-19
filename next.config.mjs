@@ -4,7 +4,7 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     // 5 images × 25 MB each = 125 MB max; set headroom above that.
-    serverBodySizeLimit: '150mb',
+    bodySizeLimit: '150mb',
   },
   // we serve images through our own access-controlled route, so Next's
   // image optimizer isn't in the path for gallery photos

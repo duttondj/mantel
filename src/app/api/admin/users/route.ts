@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin-auth';
 import { db } from '@/db';
-import { user as userTable, galleries } from '@/db/schema';
+import { user as userTable, account as accountTable, galleries } from '@/db/schema';
 import { count, desc, eq } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
 
 export async function GET(req: NextRequest) {
   const check = await requireAdmin(req);
@@ -47,26 +48,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 });
   }
 
-  // Create the account via Better Auth's own sign-up endpoint
-  const signUpRes = await fetch('http://localhost:3000/api/auth/sign-up/email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, name: name || email }),
-  });
+  const { hashPassword } = await import('@better-auth/utils/password');
+  const passwordHash = await hashPassword(password);
+  const userId = nanoid();
+  const now = new Date();
 
-  if (!signUpRes.ok) {
-    const err = await signUpRes.json().catch(() => ({}));
-    return NextResponse.json(
-      { error: (err as { message?: string }).message || 'Could not create account.' },
-      { status: 400 }
-    );
+  try {
+    await db.insert(userTable).values({
+      id: userId,
+      email,
+      name: name || email,
+      emailVerified: true,
+      createdAt: now,
+      updatedAt: now,
+      plan: 'free',
+      status: 'inactive',
+      isAdmin: false,
+    });
+    await db.insert(accountTable).values({
+      id: nanoid(),
+      userId,
+      accountId: userId,
+      providerId: 'credential',
+      password: passwordHash,
+      createdAt: now,
+      updatedAt: now,
+    });
+  } catch (err) {
+    const pgErr = err as { code?: string };
+    if (pgErr.code === '23505') {
+      return NextResponse.json({ error: 'An account with that email already exists.' }, { status: 400 });
+    }
+    throw err;
   }
 
   if (isAdmin) {
     await db
       .update(userTable)
       .set({ isAdmin: true, status: 'active', plan: 'comped' })
-      .where(eq(userTable.email, email));
+      .where(eq(userTable.id, userId));
   }
 
   return NextResponse.json({ ok: true });
