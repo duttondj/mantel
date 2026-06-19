@@ -687,6 +687,8 @@ a { color: inherit; }
  * ------------------------------------------------------------------ */
 
 .carousel { position: relative; background: #000; }
+.carousel__slide { display: none; }
+.carousel__slide--active { display: block; }
 .carousel__slide img,
 .carousel__slide video { width: 100%; display: block; }
 

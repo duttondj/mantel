@@ -97,13 +97,13 @@ export default async function GalleryPage({
       postId: string;
       guestName: string | null;
       message: string | null;
-      images: { publicId: string; mimeType: string }[];
+      images: { publicId: string; mimeType: string; width: number | null; height: number | null }[];
     }
   >();
   for (const r of rows) {
     if (!byPost.has(r.postId))
       byPost.set(r.postId, { postId: r.postId, guestName: r.guestName, message: r.message, images: [] });
-    byPost.get(r.postId)!.images.push({ publicId: r.publicId, mimeType: r.mimeType });
+    byPost.get(r.postId)!.images.push({ publicId: r.publicId, mimeType: r.mimeType, width: r.width, height: r.height });
   }
 
   // flat image list for the lightbox, with per-post start indices

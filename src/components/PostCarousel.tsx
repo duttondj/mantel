@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { useLightbox } from './GalleryLightbox';
 
-type Media = { publicId: string; mimeType: string };
+type Media = { publicId: string; mimeType: string; width?: number | null; height?: number | null };
 
 export function PostCarousel({
   images,
@@ -17,8 +17,6 @@ export function PostCarousel({
   const lb = useLightbox();
 
   if (images.length === 0) return null;
-
-  const current = images[idx];
 
   function handleTouchStart(e: React.TouchEvent) {
     touchX.current = e.touches[0].clientX;
@@ -53,7 +51,9 @@ export function PostCarousel({
         key={item.publicId}
         src={`/i/${item.publicId}`}
         alt=""
-        loading="lazy"
+        loading="eager"
+        width={item.width ?? undefined}
+        height={item.height ?? undefined}
         style={canOpen ? { cursor: 'pointer' } : undefined}
         onClick={canOpen ? () => openLightbox(localIdx) : undefined}
       />
@@ -70,7 +70,14 @@ export function PostCarousel({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
-      <div className="carousel__slide">{mediaEl(current, idx)}</div>
+      {images.map((item, i) => (
+        <div
+          key={item.publicId}
+          className={'carousel__slide' + (i === idx ? ' carousel__slide--active' : '')}
+        >
+          {mediaEl(item, i)}
+        </div>
+      ))}
 
       {idx > 0 && (
         <button
