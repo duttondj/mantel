@@ -85,6 +85,7 @@ a { color: inherit; }
 .post__images img,
 .post__images video {
   width: 100%;
+  height: auto;
   display: block;
 }
 .post__images--multi img + img,
@@ -690,7 +691,7 @@ a { color: inherit; }
 .carousel__slide { display: none; }
 .carousel__slide--active { display: block; }
 .carousel__slide img,
-.carousel__slide video { width: 100%; display: block; }
+.carousel__slide video { width: 100%; height: auto; display: block; }
 
 .carousel__arrow {
   position: absolute;
