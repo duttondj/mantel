@@ -9,6 +9,8 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { LikeButton } from '@/components/LikeButton';
 import { UploadComposer } from '@/components/UploadComposer';
 import { DeletePostButton } from '@/components/DeletePostButton';
+import { PostCarousel } from '@/components/PostCarousel';
+import { EditMessageButton } from '@/components/EditMessageButton';
 import { UnlockForm } from './UnlockForm';
 import { notFound } from 'next/navigation';
 
@@ -144,27 +146,12 @@ export default async function GalleryPage({
         <div className="wall">
           {[...byPost.values()].map((post) => (
             <article className="post" key={post.postId}>
-              <div
-                className={
-                  'post__images' + (post.images.length > 1 ? ' post__images--multi' : '')
-                }
-              >
-                {post.images.map((img) =>
-                  img.mimeType.startsWith('video/') ? (
-                    <video
-                      key={img.publicId}
-                      src={`/i/${img.publicId}`}
-                      controls
-                      preload="metadata"
-                      playsInline
-                    />
-                  ) : (
-                    <img key={img.publicId} src={`/i/${img.publicId}`} alt="" loading="lazy" />
-                  )
-                )}
-              </div>
+              <PostCarousel images={post.images} />
               <div className="post__body">
-                {post.message && <p className="post__msg">{post.message}</p>}
+                {isOwner
+                  ? <EditMessageButton postId={post.postId} initialMessage={post.message} />
+                  : post.message && <p className="post__msg">{post.message}</p>
+                }
                 {post.guestName && <p className="post__byline">{post.guestName}</p>}
                 <div className="post__actions">
                   <LikeButton

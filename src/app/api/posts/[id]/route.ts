@@ -5,6 +5,31 @@ import { eq, and } from 'drizzle-orm';
 import { auth } from '@/lib/auth';
 import { deleteObject } from '@/lib/storage';
 
+/* PATCH /api/posts/<id>  — host edits the message on a guest post */
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await auth.api.getSession({ headers: req.headers });
+  if (!session) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
+
+  const { id } = await params;
+  const body = await req.json();
+  const raw = typeof body.message === 'string' ? body.message.trim() : '';
+  const message = raw.slice(0, 180) || null;
+
+  const [ownsPost] = await db
+    .select({ id: posts.id })
+    .from(posts)
+    .innerJoin(galleries, eq(posts.galleryId, galleries.id))
+    .where(and(eq(posts.id, id), eq(galleries.ownerId, session.user.id)));
+
+  if (!ownsPost) return NextResponse.json({ error: 'Not found.' }, { status: 404 });
+
+  await db.update(posts).set({ message }).where(eq(posts.id, id));
+  return NextResponse.json({ ok: true });
+}
+
 /*
  * DELETE /api/posts/<id>  — host removes a guest post from one of THEIR
  * galleries (moderation). Verifies the post belongs to a gallery the

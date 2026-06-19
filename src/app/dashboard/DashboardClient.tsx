@@ -136,9 +136,14 @@ export function DashboardClient({
                           {g.hasPassword ? 'Change password' : 'Add password'}
                         </button>
                       </div>
-                      <button className="gcard__danger" onClick={() => setDeleteModal(g)}>
-                        Delete gallery
-                      </button>
+                      <div className="gcard__footer">
+                        <a className="linkbtn" href={`/api/galleries/${g.id}/download`}>
+                          Download all photos &amp; videos
+                        </a>
+                        <button className="gcard__danger" onClick={() => setDeleteModal(g)}>
+                          Delete gallery
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

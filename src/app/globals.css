@@ -675,3 +675,86 @@ a { color: inherit; }
   cursor: pointer;
 }
 .gcard__danger:hover { color: var(--rose-deep); text-decoration: underline; }
+.gcard__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* ------------------------------------------------------------------ *
+ *  MULTI-IMAGE CAROUSEL
+ * ------------------------------------------------------------------ */
+
+.carousel { position: relative; background: #000; }
+.carousel__slide img,
+.carousel__slide video { width: 100%; display: block; }
+
+.carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(34, 29, 24, 0.45);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  z-index: 1;
+  padding: 0;
+}
+.carousel__arrow:hover { background: rgba(34, 29, 24, 0.75); }
+.carousel__arrow--prev { left: 0.4rem; }
+.carousel__arrow--next { right: 0.4rem; }
+
+.carousel__dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0;
+  background: #fff;
+}
+.carousel__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--line);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.carousel__dot--active { background: var(--rose); }
+
+/* ------------------------------------------------------------------ *
+ *  INLINE MESSAGE EDIT (host-only)
+ * ------------------------------------------------------------------ */
+
+.post__msg-host { margin-bottom: 0; }
+.post__msg-edit { margin: 0 0 0.6rem; }
+.post__msg-textarea {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-family: var(--body);
+  font-size: 0.9rem;
+  background: var(--paper);
+  resize: vertical;
+  display: block;
+}
+.post__msg-textarea:focus { outline: 2px solid var(--rose); outline-offset: 1px; }
+.post__msg-chars {
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+  text-align: right;
+  margin: 0.2rem 0 0.4rem;
+}
+.post__msg-chars--low { color: var(--rose-deep); }
