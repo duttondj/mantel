@@ -1,6 +1,6 @@
-ALTER TABLE "images" ADD COLUMN "mime_type" text DEFAULT 'image/jpeg' NOT NULL;
+ALTER TABLE "images" ADD COLUMN IF NOT EXISTS "mime_type" text DEFAULT 'image/jpeg' NOT NULL;
 --> statement-breakpoint
-CREATE TABLE "likes" (
+CREATE TABLE IF NOT EXISTS "likes" (
 	"post_id" uuid NOT NULL,
 	"guest_token" text NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
