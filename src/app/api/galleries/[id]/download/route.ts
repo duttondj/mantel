@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PassThrough, Readable } from 'node:stream';
-import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import archiver from 'archiver';
 import { db } from '@/db';
 import { galleries, posts, images } from '@/db/schema';
@@ -59,10 +58,11 @@ export async function GET(
         const name = isVideo
           ? `video-${String(++vidIndex).padStart(3, '0')}.${ext}`
           : `photo-${String(++imgIndex).padStart(3, '0')}.${ext}`;
-        const nodeStream = Readable.fromWeb(obj.Body as unknown as WebReadableStream);
-        archive.append(nodeStream, { name });
-      } catch {
-        // skip any file that fails to fetch
+        // AWS SDK v3 Body is a Node.js Readable in the Node.js runtime —
+        // do NOT call Readable.fromWeb(), which expects a Web ReadableStream.
+        archive.append(obj.Body as unknown as Readable, { name });
+      } catch (err) {
+        console.error(`[download] skipping ${file.storageKey}:`, err);
       }
     }
     archive.finalize();

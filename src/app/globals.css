@@ -717,13 +717,32 @@ a { color: inherit; }
 .carousel__arrow--prev { left: 0.4rem; }
 .carousel__arrow--next { right: 0.4rem; }
 
+.carousel__footer {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  padding: 0 0.75rem;
+}
 .carousel__dots {
   display: flex;
+  flex: 1;
   justify-content: center;
   gap: 0.35rem;
   padding: 0.45rem 0;
-  background: #fff;
 }
+.post__download-bar {
+  display: flex;
+  justify-content: flex-end;
+  background: #fff;
+  padding: 0 0.75rem 0.35rem;
+}
+.post__download {
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.post__download:hover { color: var(--ink); }
 .carousel__dot {
   width: 6px;
   height: 6px;

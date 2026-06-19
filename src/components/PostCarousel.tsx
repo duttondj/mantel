@@ -61,7 +61,16 @@ export function PostCarousel({
   };
 
   if (images.length === 1) {
-    return <div className="post__images">{mediaEl(images[0], 0)}</div>;
+    return (
+      <>
+        <div className="post__images">{mediaEl(images[0], 0)}</div>
+        <div className="post__download-bar">
+          <a className="post__download" href={`/i/${images[0].publicId}?download=1`} download>
+            Download
+          </a>
+        </div>
+      </>
+    );
   }
 
   return (
@@ -98,15 +107,24 @@ export function PostCarousel({
         </button>
       )}
 
-      <div className="carousel__dots">
-        {images.map((_, i) => (
-          <button
-            key={i}
-            className={'carousel__dot' + (i === idx ? ' carousel__dot--active' : '')}
-            onClick={() => setIdx(i)}
-            aria-label={`Go to image ${i + 1} of ${images.length}`}
-          />
-        ))}
+      <div className="carousel__footer">
+        <div className="carousel__dots">
+          {images.map((_, i) => (
+            <button
+              key={i}
+              className={'carousel__dot' + (i === idx ? ' carousel__dot--active' : '')}
+              onClick={() => setIdx(i)}
+              aria-label={`Go to image ${i + 1} of ${images.length}`}
+            />
+          ))}
+        </div>
+        <a
+          className="post__download"
+          href={`/i/${images[idx].publicId}?download=1`}
+          download
+        >
+          Download
+        </a>
       </div>
     </div>
   );

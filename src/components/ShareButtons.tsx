@@ -22,16 +22,6 @@ export function ShareButtons({ publicId }: { publicId: string }) {
       ? `${window.location.origin}/i/${publicId}`
       : `/i/${publicId}`;
 
-  async function download() {
-    const res = await fetch(`/i/${publicId}`);
-    const blob = await res.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `photo-${publicId}.jpg`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-
   async function copyLink() {
     await navigator.clipboard.writeText(imageUrl);
     setCopied(true);
@@ -50,9 +40,8 @@ export function ShareButtons({ publicId }: { publicId: string }) {
         return;
       }
     } catch {
-      /* fall through to download */
+      /* sharing not available on this device */
     }
-    download();
   }
 
   const x = `https://twitter.com/intent/tweet?url=${encodeURIComponent(imageUrl)}`;
@@ -61,7 +50,6 @@ export function ShareButtons({ publicId }: { publicId: string }) {
   return (
     <div className="share">
       <button onClick={nativeShare} className="share__btn">Share</button>
-      <button onClick={download} className="share__btn">Download</button>
       <button onClick={copyLink} className="share__btn">
         {copied ? 'Copied' : 'Copy link'}
       </button>
