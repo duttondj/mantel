@@ -10,6 +10,7 @@ type Gallery = {
   title: string;
   slug: string;
   hasPassword: boolean;
+  uploadsClosedAt: string | null;
   postCount: number;
 };
 
@@ -140,9 +141,14 @@ export function DashboardClient({
                         <a className="linkbtn" href={`/api/galleries/${g.id}/download`}>
                           Download all photos &amp; videos
                         </a>
-                        <button className="gcard__danger" onClick={() => setDeleteModal(g)}>
-                          Delete gallery
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                          {!g.uploadsClosedAt && (
+                            <CloseUploadsButton galleryId={g.id} onClosed={load} />
+                          )}
+                          <button className="gcard__danger" onClick={() => setDeleteModal(g)}>
+                            Delete gallery
+                          </button>
+                        </div>
                       </div>
                     </div>
                   );
@@ -432,5 +438,47 @@ function DeleteGalleryModal({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ---- close uploads for a gallery ---- */
+function CloseUploadsButton({
+  galleryId,
+  onClosed,
+}: {
+  galleryId: string;
+  onClosed: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  if (!confirming) {
+    return (
+      <button className="gcard__danger" onClick={() => setConfirming(true)}>
+        Close uploads
+      </button>
+    );
+  }
+
+  async function confirm() {
+    setBusy(true);
+    await fetch(`/api/galleries/${galleryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uploadsClosedAt: new Date().toISOString() }),
+    });
+    onClosed();
+  }
+
+  return (
+    <span style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
+      Close uploads?
+      <button className="mod-btn mod-btn--danger" onClick={confirm} disabled={busy}>
+        {busy ? '…' : 'Yes'}
+      </button>
+      <button className="mod-btn" onClick={() => setConfirming(false)} disabled={busy}>
+        No
+      </button>
+    </span>
   );
 }

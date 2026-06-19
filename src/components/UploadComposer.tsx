@@ -18,7 +18,7 @@ function readNameCookie(): string {
   return match ? decodeURIComponent(match.split('=')[1]) : '';
 }
 
-export function UploadComposer({ slug }: { slug: string }) {
+export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsClosed?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [previews, setPreviews] = useState<Preview[]>([]);
@@ -129,9 +129,13 @@ export function UploadComposer({ slug }: { slug: string }) {
   return (
     <>
       <div className="upload-cta">
-        <button className="btn btn--sm" onClick={() => setOpen(true)}>
-          Add photos & videos
-        </button>
+        {uploadsClosed ? (
+          <p className="upload-closed">Uploads for this gallery have closed.</p>
+        ) : (
+          <button className="btn btn--sm" onClick={() => setOpen(true)}>
+            Add photos &amp; videos
+          </button>
+        )}
       </div>
 
       {open && (

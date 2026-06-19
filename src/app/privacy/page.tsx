@@ -89,7 +89,7 @@ export default function PrivacyPage() {
         <h2>Contact</h2>
         <p>
           For questions or requests about your data, email{' '}
-          <a href="mailto:dannydutton2@gmail.com">dannydutton2@gmail.com</a>.
+          <a href="mailto:admin@mantel.wedding">admin@mantel.wedding</a>.
         </p>
 
         <p className="privacy__back">

@@ -23,5 +23,12 @@
       "tag": "0002_admin_and_filesize",
       "breakpoints": true
     }
+    ,{
+      "idx": 3,
+      "version": "7",
+      "when": 1781105149314,
+      "tag": "0003_upload_cutoff",
+      "breakpoints": true
+    }
   ]
 }

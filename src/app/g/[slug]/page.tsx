@@ -11,6 +11,7 @@ import { UploadComposer } from '@/components/UploadComposer';
 import { DeletePostButton } from '@/components/DeletePostButton';
 import { PostCarousel } from '@/components/PostCarousel';
 import { EditMessageButton } from '@/components/EditMessageButton';
+import { GalleryLightbox, type LightboxImage } from '@/components/GalleryLightbox';
 import { UnlockForm } from './UnlockForm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -30,6 +31,7 @@ export default async function GalleryPage({
       id: galleries.id,
       title: galleries.title,
       passwordHash: galleries.passwordHash,
+      uploadsClosedAt: galleries.uploadsClosedAt,
       ownerId: galleries.ownerId,
       ownerStatus: userTable.status,
       ownerExpiresAt: userTable.expiresAt,
@@ -69,6 +71,7 @@ export default async function GalleryPage({
   // never see them.
   const session = await auth.api.getSession({ headers: await headers() });
   const isOwner = session?.user?.id === gallery.ownerId;
+  const uploadsClosed = !!(gallery.uploadsClosedAt && gallery.uploadsClosedAt <= new Date());
 
   // load posts with their media
   const rows = await db
@@ -101,6 +104,21 @@ export default async function GalleryPage({
     if (!byPost.has(r.postId))
       byPost.set(r.postId, { postId: r.postId, guestName: r.guestName, message: r.message, images: [] });
     byPost.get(r.postId)!.images.push({ publicId: r.publicId, mimeType: r.mimeType });
+  }
+
+  // flat image list for the lightbox, with per-post start indices
+  const allLightboxImages: LightboxImage[] = [];
+  const startIndexByPost = new Map<string, number>();
+  for (const post of byPost.values()) {
+    startIndexByPost.set(post.postId, allLightboxImages.length);
+    for (const img of post.images) {
+      allLightboxImages.push({
+        publicId: img.publicId,
+        mimeType: img.mimeType,
+        guestName: post.guestName,
+        message: post.message,
+      });
+    }
   }
 
   // like counts and this guest's liked set
@@ -137,7 +155,7 @@ export default async function GalleryPage({
         <p className="masthead__sub">Every guest's view of the day, in one place.</p>
       </header>
 
-      <UploadComposer slug={slug} />
+      <UploadComposer slug={slug} uploadsClosed={uploadsClosed} />
 
       {byPost.size === 0 ? (
         <div className="panel">
@@ -145,29 +163,34 @@ export default async function GalleryPage({
           <p>Be the first to add a moment from the day.</p>
         </div>
       ) : (
-        <div className="wall">
-          {[...byPost.values()].map((post) => (
-            <article className="post" key={post.postId}>
-              <PostCarousel images={post.images} />
-              <div className="post__body">
-                {isOwner
-                  ? <EditMessageButton postId={post.postId} initialMessage={post.message} />
-                  : post.message && <p className="post__msg">{post.message}</p>
-                }
-                {post.guestName && <p className="post__byline">{post.guestName}</p>}
-                <div className="post__actions">
-                  <LikeButton
-                    postId={post.postId}
-                    initialCount={likeCounts.get(post.postId) ?? 0}
-                    initialLiked={guestLikedSet.has(post.postId)}
-                  />
-                  <ShareButtons publicId={post.images[0].publicId} />
+        <GalleryLightbox allImages={allLightboxImages}>
+          <div className="wall">
+            {[...byPost.values()].map((post) => (
+              <article className="post" key={post.postId}>
+                <PostCarousel
+                  images={post.images}
+                  startIndex={startIndexByPost.get(post.postId)}
+                />
+                <div className="post__body">
+                  {isOwner
+                    ? <EditMessageButton postId={post.postId} initialMessage={post.message} />
+                    : post.message && <p className="post__msg">{post.message}</p>
+                  }
+                  {post.guestName && <p className="post__byline">{post.guestName}</p>}
+                  <div className="post__actions">
+                    <LikeButton
+                      postId={post.postId}
+                      initialCount={likeCounts.get(post.postId) ?? 0}
+                      initialLiked={guestLikedSet.has(post.postId)}
+                    />
+                    <ShareButtons publicId={post.images[0].publicId} />
+                  </div>
+                  {isOwner && <DeletePostButton postId={post.postId} />}
                 </div>
-                {isOwner && <DeletePostButton postId={post.postId} />}
-              </div>
-            </article>
-          ))}
-        </div>
+              </article>
+            ))}
+          </div>
+        </GalleryLightbox>
       )}
     </div>
 

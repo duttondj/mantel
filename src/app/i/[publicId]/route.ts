@@ -68,16 +68,21 @@ export async function GET(
   }
 
   // authorized — stream the object back, with Range support for video seeking
+  const download = req.nextUrl.searchParams.get('download') === '1';
   const rangeHeader = req.headers.get('range') ?? undefined;
   const obj = await getObjectStream(row.storageKey, rangeHeader);
   const body = obj.Body as unknown as ReadableStream;
 
+  const ct = obj.ContentType || 'image/jpeg';
+  const ext = ct.includes('jpeg') ? 'jpg' : ct.split('/')[1] || 'bin';
+
   const responseHeaders: Record<string, string> = {
-    'Content-Type': obj.ContentType || 'image/jpeg',
+    'Content-Type': ct,
     // private: don't let shared caches hold images for locked galleries
     'Cache-Control': 'private, max-age=3600',
     'Accept-Ranges': 'bytes',
   };
+  if (download) responseHeaders['Content-Disposition'] = `attachment; filename="photo.${ext}"`;
   if (obj.ContentRange) responseHeaders['Content-Range'] = obj.ContentRange;
   if (obj.ContentLength != null) responseHeaders['Content-Length'] = String(obj.ContentLength);
 

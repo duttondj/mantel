@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
     .select({
       id: galleries.id,
       passwordHash: galleries.passwordHash,
+      uploadsClosedAt: galleries.uploadsClosedAt,
       ownerStatus: userTable.status,
       ownerExpiresAt: userTable.expiresAt,
     })
@@ -71,6 +72,9 @@ export async function POST(req: NextRequest) {
 
   if (!isEntitled({ status: gallery.ownerStatus, expiresAt: gallery.ownerExpiresAt }))
     return NextResponse.json({ error: 'This gallery has expired.' }, { status: 410 });
+
+  if (gallery.uploadsClosedAt && gallery.uploadsClosedAt <= new Date())
+    return NextResponse.json({ error: 'Uploads for this gallery have closed.' }, { status: 410 });
 
   // locked gallery: must have unlocked it to post
   if (gallery.passwordHash) {

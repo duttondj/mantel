@@ -1,36 +1,76 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { useLightbox } from './GalleryLightbox';
 
 type Media = { publicId: string; mimeType: string };
 
-export function PostCarousel({ images }: { images: Media[] }) {
+export function PostCarousel({
+  images,
+  startIndex,
+}: {
+  images: Media[];
+  startIndex?: number;
+}) {
   const [idx, setIdx] = useState(0);
+  const touchX = useRef<number | null>(null);
+  const lb = useLightbox();
 
   if (images.length === 0) return null;
 
   const current = images[idx];
 
-  const media = (item: Media) =>
-    item.mimeType.startsWith('video/') ? (
+  function handleTouchStart(e: React.TouchEvent) {
+    touchX.current = e.touches[0].clientX;
+  }
+
+  function handleTouchEnd(e: React.TouchEvent) {
+    if (touchX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (delta < -50 && idx < images.length - 1) setIdx((i) => i + 1);
+    else if (delta > 50 && idx > 0) setIdx((i) => i - 1);
+  }
+
+  function openLightbox(localIdx: number) {
+    if (lb && startIndex !== undefined) lb.openAt(startIndex + localIdx);
+  }
+
+  const mediaEl = (item: Media, localIdx: number) => {
+    const canOpen = lb && startIndex !== undefined;
+    return item.mimeType.startsWith('video/') ? (
       <video
         key={item.publicId}
         src={`/i/${item.publicId}`}
         controls
         preload="metadata"
         playsInline
+        style={canOpen ? { cursor: 'pointer' } : undefined}
+        onClick={canOpen ? () => openLightbox(localIdx) : undefined}
       />
     ) : (
-      <img key={item.publicId} src={`/i/${item.publicId}`} alt="" loading="lazy" />
+      <img
+        key={item.publicId}
+        src={`/i/${item.publicId}`}
+        alt=""
+        loading="lazy"
+        style={canOpen ? { cursor: 'pointer' } : undefined}
+        onClick={canOpen ? () => openLightbox(localIdx) : undefined}
+      />
     );
+  };
 
   if (images.length === 1) {
-    return <div className="post__images">{media(images[0])}</div>;
+    return <div className="post__images">{mediaEl(images[0], 0)}</div>;
   }
 
   return (
-    <div className="post__images carousel">
-      <div className="carousel__slide">{media(current)}</div>
+    <div
+      className="post__images carousel"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="carousel__slide">{mediaEl(current, idx)}</div>
 
       {idx > 0 && (
         <button
