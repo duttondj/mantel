@@ -38,17 +38,17 @@ function isHeic(buf: Buffer): boolean {
 export async function storeVideo(
   input: Buffer,
   mimeType: string
-): Promise<{ storageKey: string; publicId: string }> {
+): Promise<{ storageKey: string; publicId: string; fileSize: number }> {
   const ext = mimeType === 'video/mp4' ? 'mp4' : mimeType === 'video/webm' ? 'webm' : 'mov';
   const publicId = nanoid();
   const storageKey = `vid/${publicId}.${ext}`;
   await putObject(storageKey, input, mimeType);
-  return { storageKey, publicId };
+  return { storageKey, publicId, fileSize: input.length };
 }
 
 export async function stripAndStore(
   input: Buffer
-): Promise<{ storageKey: string; publicId: string; width: number; height: number }> {
+): Promise<{ storageKey: string; publicId: string; width: number; height: number; fileSize: number }> {
   // HEIC must be decoded to a sharp-readable format first.
   let working = input;
   if (isHeic(input)) {
@@ -70,5 +70,5 @@ export async function stripAndStore(
 
   await putObject(storageKey, data, 'image/jpeg');
 
-  return { storageKey, publicId, width: info.width, height: info.height };
+  return { storageKey, publicId, width: info.width, height: info.height, fileSize: data.length };
 }

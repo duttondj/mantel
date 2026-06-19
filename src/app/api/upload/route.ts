@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
     publicId: string;
     storageKey: string;
     mimeType: string;
+    fileSize: number;
     width?: number | null;
     height?: number | null;
   }[] = [];
@@ -114,6 +115,7 @@ export async function POST(req: NextRequest) {
         const result = await stripAndStore(buf); // EXIF/location stripped here
         stored.push({ ...result, mimeType: 'image/jpeg' });
       }
+
     } catch {
       skipped.push(`${file.name || 'a file'} (couldn't be processed)`);
     }
@@ -145,6 +147,7 @@ export async function POST(req: NextRequest) {
         publicId: s.publicId,
         storageKey: s.storageKey,
         mimeType: s.mimeType,
+        fileSize: s.fileSize,
         width: s.width ?? null,
         height: s.height ?? null,
       })

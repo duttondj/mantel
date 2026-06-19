@@ -10,6 +10,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --experimental-strip-types scripts/migrate.ts",
     "db:seed": "node --experimental-strip-types scripts/seed.ts",
+    "db:create-admin": "node --experimental-strip-types scripts/create-admin.ts",
     "purge": "node --experimental-strip-types scripts/purge.ts"
   },
   "dependencies": {
@@ -24,6 +25,7 @@
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "resend": "^4.0.0",
     "sharp": "^0.33.5"
   },
   "devDependencies": {

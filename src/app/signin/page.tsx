@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn, signUp } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -71,6 +72,14 @@ export default function SignInPage() {
           {busy ? 'Just a moment…' : mode === 'signin' ? 'Sign in' : 'Create account'}
         </button>
         {error && <p className="err">{error}</p>}
+
+        {mode === 'signin' && (
+          <p className="switch">
+            <Link href="/forgot-password" className="linkbtn">
+              Forgot your password?
+            </Link>
+          </p>
+        )}
 
         <p className="switch">
           {mode === 'signin' ? (

@@ -1,0 +1,24 @@
+import { Resend } from 'resend';
+
+function resend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) throw new Error('RESEND_API_KEY is not set');
+  return new Resend(key);
+}
+
+const FROM = process.env.RESEND_FROM ?? 'Mantel <noreply@mantel.wedding>';
+
+export async function sendPasswordResetEmail(to: string, resetUrl: string) {
+  await resend().emails.send({
+    from: FROM,
+    to,
+    subject: 'Reset your Mantel password',
+    html: `
+<div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#221d18;padding:2rem">
+  <h2 style="font-family:Georgia,serif;margin:0 0 1rem">Reset your password</h2>
+  <p style="margin:0 0 1.5rem;color:#6b6058">Someone requested a password reset for your Mantel account. If that was you, click below.</p>
+  <a href="${resetUrl}" style="display:inline-block;background:#b6705f;color:#fff;text-decoration:none;padding:0.75rem 1.5rem;border-radius:6px;font-weight:600">Reset password</a>
+  <p style="margin:1.5rem 0 0;font-size:0.85rem;color:#6b6058">This link expires in 1 hour. If you didn't request a reset, you can safely ignore this email.</p>
+</div>`,
+  });
+}

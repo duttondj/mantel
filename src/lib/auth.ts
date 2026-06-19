@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
+import { sendPasswordResetEmail } from './email';
 
 /*
  * Better Auth for the HOSTS (account owners). Sessions live in our own
@@ -23,8 +24,10 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    // keep the MVP simple; turn on verification when you wire up email
     requireEmailVerification: false,
+    sendResetPassword: async ({ user, url }) => {
+      await sendPasswordResetEmail(user.email, url);
+    },
   },
   // Brute-force protection on auth endpoints (sign-in/up etc). Better Auth
   // enables this in production by default, but we set it explicitly so it

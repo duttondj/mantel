@@ -32,6 +32,8 @@ export const user = pgTable('user', {
   expiresAt: timestamp('expires_at'),
   // 'inactive' (signed up, not paid/redeemed), 'active', 'expired'
   status: text('status').notNull().default('inactive'),
+  // site admin flag — grants access to the /admin dashboard
+  isAdmin: boolean('is_admin').notNull().default(false),
 });
 
 export const session = pgTable('session', {
@@ -117,6 +119,8 @@ export const images = pgTable('images', {
   mimeType: text('mime_type').notNull().default('image/jpeg'),
   width: integer('width'),
   height: integer('height'),
+  // stored size in bytes — populated on upload; null for rows pre-dating this column
+  fileSize: integer('file_size'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

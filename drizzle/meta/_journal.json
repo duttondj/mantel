@@ -15,6 +15,13 @@
       "when": 1750262400000,
       "tag": "0001_likes_and_mime_type",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1750348800000,
+      "tag": "0002_admin_and_filesize",
+      "breakpoints": true
     }
   ]
 }
