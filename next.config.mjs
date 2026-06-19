@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 5 images × 25 MB each = 125 MB max; set headroom above that.
+  serverBodySizeLimit: '150mb',
   // standalone build = small Docker image, only ships what's needed to run
   output: 'standalone',
   // we serve images through our own access-controlled route, so Next's
