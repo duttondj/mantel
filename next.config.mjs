@@ -3,8 +3,11 @@ const nextConfig = {
   // standalone build = small Docker image, only ships what's needed to run
   output: 'standalone',
   experimental: {
-    // 5 images × 25 MB each = 125 MB max; set headroom above that.
-    bodySizeLimit: '150mb',
+    serverActions: {
+      bodySizeLimit: '150mb',
+    },
+    // raises the default 10MB cap on request bodies readable by route handlers
+    middlewareClientMaxBodySize: '150mb',
   },
   // we serve images through our own access-controlled route, so Next's
   // image optimizer isn't in the path for gallery photos

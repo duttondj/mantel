@@ -40,7 +40,13 @@ export async function POST(req: NextRequest) {
       { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
     );
 
-  const form = await req.formData();
+  let form: FormData;
+  try {
+    form = await req.formData();
+  } catch (err) {
+    console.error('[upload] formData parse error:', err);
+    return NextResponse.json({ error: 'Upload failed — could not parse the request. Try fewer or smaller files.' }, { status: 400 });
+  }
   const slug = String(form.get('slug') || '');
   const message = String(form.get('message') || '').slice(0, MAX_MESSAGE) || null;
   const guestName = String(form.get('guestName') || '').slice(0, 80) || null;
