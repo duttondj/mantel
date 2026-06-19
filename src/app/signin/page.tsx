@@ -13,23 +13,80 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState(false);
+  const [resendBusy, setResendBusy] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
 
   async function submit() {
     setBusy(true);
     setError('');
     try {
       if (mode === 'signup') {
-        const { error } = await signUp.email({ email, password, name });
+        const { error } = await signUp.email({
+          email,
+          password,
+          name,
+          callbackURL: '/dashboard',
+        });
         if (error) throw new Error(error.message || 'Could not create account.');
+        setPendingVerification(true);
       } else {
         const { error } = await signIn.email({ email, password });
-        if (error) throw new Error(error.message || 'Could not sign in.');
+        if (error) {
+          // Better Auth returns this when email isn't verified yet
+          if (error.code === 'EMAIL_NOT_VERIFIED' || error.message?.toLowerCase().includes('verif')) {
+            setPendingVerification(true);
+            setBusy(false);
+            return;
+          }
+          throw new Error(error.message || 'Could not sign in.');
+        }
+        router.push('/dashboard');
       }
-      router.push('/dashboard');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
       setBusy(false);
     }
+  }
+
+  async function resendVerification() {
+    setResendBusy(true);
+    await fetch('/api/auth/send-verification-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, callbackURL: `${window.location.origin}/dashboard` }),
+    });
+    setResendBusy(false);
+    setResendDone(true);
+  }
+
+  if (pendingVerification) {
+    return (
+      <div className="wrap">
+        <div className="panel">
+          <h2>Check your email</h2>
+          <p>
+            We sent a verification link to <strong>{email}</strong>. Click it to activate your
+            account, then come back to sign in.
+          </p>
+          {resendDone ? (
+            <p className="switch">Verification email resent.</p>
+          ) : (
+            <p className="switch">
+              {"Didn't get it? "}
+              <button className="linkbtn" onClick={resendVerification} disabled={resendBusy}>
+                {resendBusy ? 'Sending…' : 'Resend verification email'}
+              </button>
+            </p>
+          )}
+          <p className="switch">
+            <button className="linkbtn" onClick={() => { setPendingVerification(false); setMode('signin'); }}>
+              Back to sign in
+            </button>
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (

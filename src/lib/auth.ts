@@ -2,7 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
-import { sendPasswordResetEmail } from './email';
+import { sendPasswordResetEmail, sendVerificationEmail } from './email';
 
 /*
  * Better Auth for the HOSTS (account owners). Sessions live in our own
@@ -24,8 +24,11 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: false,
-    sendResetPassword: async ({ user, url }) => {
+    requireEmailVerification: true,
+    sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
+      await sendVerificationEmail(user.email, url);
+    },
+    sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
       await sendPasswordResetEmail(user.email, url);
     },
   },
