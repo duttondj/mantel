@@ -57,7 +57,7 @@ export default function Home() {
             </div>
             <div className="feature">
               <h3 className="feature__h">Yours to keep</h3>
-              <p className="feature__p">Download every photo and video from your gallery as a single ZIP at any time. Your event, your photos — always.</p>
+              <p className="feature__p">Download every photo and video as a single ZIP at any time during your one-year hosting period. After that, galleries expire and photos are deleted — so save yours before then.</p>
             </div>
           </div>
         </section>
