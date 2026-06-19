@@ -397,7 +397,7 @@ function DeleteGalleryModal({
         <p className="banner__text" style={{ marginBottom: '1rem' }}>
           This permanently deletes <strong>{gallery.title}</strong> and all{' '}
           {gallery.postCount} {gallery.postCount === 1 ? 'post' : 'posts'} in it,
-          including every photo. This can’t be undone.
+          including every photo. This can't be undone.
         </p>
         <div className="field">
           <label htmlFor="confirm">

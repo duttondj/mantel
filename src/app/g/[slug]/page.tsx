@@ -130,7 +130,7 @@ export default async function GalleryPage({
       <header className="masthead">
         <p className="masthead__eyebrow">A shared album</p>
         <h1 className="masthead__title">{gallery.title}</h1>
-        <p className="masthead__sub">Every guest’s view of the day, in one place.</p>
+        <p className="masthead__sub">Every guest's view of the day, in one place.</p>
       </header>
 
       <UploadComposer slug={slug} />

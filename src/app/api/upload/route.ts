@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
   const rl = checkRateLimit(`upload:${clientIp(req)}`, RULES.upload);
   if (!rl.ok)
     return NextResponse.json(
-      { error: 'You’re posting very quickly. Please wait a moment and try again.' },
+      { error: "You're posting very quickly. Please wait a moment and try again." },
       { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
     );
 
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'This gallery is locked.' }, { status: 401 });
   }
 
-  // process files first so we don’t create an empty post if all fail
+  // process files first so we don't create an empty post if all fail
   const stored: {
     publicId: string;
     storageKey: string;
@@ -91,17 +91,17 @@ export async function POST(req: NextRequest) {
 
   for (const file of files) {
     const isVideo = ACCEPTED_VIDEO_TYPES.includes(file.type);
-    const isImage = file.type.startsWith(‘image/’);
+    const isImage = file.type.startsWith('image/');
 
     if (!isVideo && !isImage) {
-      skipped.push(`${file.name || ‘a file’} (unsupported file type)`);
+      skipped.push(`${file.name || 'a file'} (unsupported file type)`);
       continue;
     }
 
     const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
     if (file.size > limit) {
-      const cap = isVideo ? ‘200MB’ : ‘25MB’;
-      skipped.push(`${file.name || ‘a file’} (too large, max ${cap})`);
+      const cap = isVideo ? '200MB' : '25MB';
+      skipped.push(`${file.name || 'a file'} (too large, max ${cap})`);
       continue;
     }
 
@@ -112,10 +112,10 @@ export async function POST(req: NextRequest) {
         stored.push({ ...result, mimeType: file.type });
       } else {
         const result = await stripAndStore(buf); // EXIF/location stripped here
-        stored.push({ ...result, mimeType: ‘image/jpeg’ });
+        stored.push({ ...result, mimeType: 'image/jpeg' });
       }
     } catch {
-      skipped.push(`${file.name || ‘a file’} (couldn’t be processed)`);
+      skipped.push(`${file.name || 'a file'} (couldn't be processed)`);
     }
   }
 
@@ -124,8 +124,8 @@ export async function POST(req: NextRequest) {
       {
         error:
           skipped.length > 0
-            ? `None of your files could be added: ${skipped.join(‘; ‘)}.`
-            : ‘No files could be added.’,
+            ? `None of your files could be added: ${skipped.join('; ')}.`
+            : 'No files could be added.',
       },
       { status: 400 }
     );

@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Mantel — shared event galleries',
-  description: 'Every guest’s view of the day, in one place.',
+  description: "Every guest's view of the day, in one place.",
 };
 
 export default function RootLayout({

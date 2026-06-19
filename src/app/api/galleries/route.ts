@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   if (!me || !isEntitled(me))
     return NextResponse.json(
-      { error: 'Your account isn’t active yet. Redeem a code or subscribe first.' },
+      { error: "Your account isn't active yet. Redeem a code or subscribe first." },
       { status: 403 }
     );
 

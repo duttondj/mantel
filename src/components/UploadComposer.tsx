@@ -41,12 +41,12 @@ export function UploadComposer({ slug }: { slug: string }) {
 
   const addFiles = useCallback(
     (incoming: FileList | File[]) => {
-      setError(‘’);
+      setError('');
       const accepted = Array.from(incoming).filter(
-        (f) => f.type.startsWith(‘image/’) || ACCEPTED_VIDEO_TYPES.includes(f.type)
+        (f) => f.type.startsWith('image/') || ACCEPTED_VIDEO_TYPES.includes(f.type)
       );
       if (accepted.length === 0) {
-        setError(‘Those files don’t look like photos or videos.’);
+        setError("Those files don't look like photos or videos.");
         return;
       }
       setPreviews((prev) => {
