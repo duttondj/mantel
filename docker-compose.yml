@@ -20,6 +20,11 @@ services:
       APP_URL: ${APP_URL:-http://localhost:13000}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM: ${RESEND_FROM:-Mantel <noreply@mantel.wedding>}
+      SQUARE_ACCESS_TOKEN: ${SQUARE_ACCESS_TOKEN:-}
+      SQUARE_LOCATION_ID: ${SQUARE_LOCATION_ID:-}
+      SQUARE_WEBHOOK_SECRET: ${SQUARE_WEBHOOK_SECRET:-}
+      SQUARE_ENVIRONMENT: ${SQUARE_ENVIRONMENT:-sandbox}
+      SQUARE_PRICE_CENTS: ${SQUARE_PRICE_CENTS:-2000}
       NODE_ENV: production
     depends_on:
       db:

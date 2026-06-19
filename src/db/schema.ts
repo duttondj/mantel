@@ -34,6 +34,9 @@ export const user = pgTable('user', {
   status: text('status').notNull().default('inactive'),
   // site admin flag — grants access to the /admin dashboard
   isAdmin: boolean('is_admin').notNull().default(false),
+  // expiry reminder tracking — null means the reminder hasn't been sent yet
+  reminder30dAt: timestamp('reminder_30d_at'),
+  reminder7dAt:  timestamp('reminder_7d_at'),
 });
 
 export const session = pgTable('session', {

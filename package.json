@@ -11,7 +11,8 @@
     "db:migrate": "node --experimental-strip-types scripts/migrate.ts",
     "db:seed": "node --experimental-strip-types scripts/seed.ts",
     "db:create-admin": "node --experimental-strip-types scripts/create-admin.ts",
-    "purge": "node --experimental-strip-types scripts/purge.ts"
+    "purge": "node --experimental-strip-types scripts/purge.ts",
+    "remind": "node --experimental-strip-types scripts/remind.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.658.0",
@@ -22,17 +23,20 @@
     "heic-convert": "^2.1.0",
     "nanoid": "^5.0.9",
     "next": "^15.1.0",
+    "node-cron": "^4.4.1",
     "pg": "^8.13.0",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "resend": "^4.0.0",
-    "sharp": "^0.33.5"
+    "sharp": "^0.33.5",
+    "square": "^44.2.0"
   },
   "devDependencies": {
     "@types/archiver": "^6.0.3",
     "@types/heic-convert": "^2.1.1",
     "@types/node": "^22.0.0",
+    "@types/node-cron": "^3.0.11",
     "@types/pg": "^8.11.0",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^19.0.0",

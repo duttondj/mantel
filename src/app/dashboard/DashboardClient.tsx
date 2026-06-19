@@ -29,6 +29,7 @@ export function DashboardClient({
   const [galleries, setGalleries] = useState<Gallery[]>([]);
   const [loading, setLoading] = useState(true);
   const [origin, setOrigin] = useState('');
+  const [paymentBanner, setPaymentBanner] = useState(false);
 
   // modals
   const [showCreate, setShowCreate] = useState(false);
@@ -36,6 +37,15 @@ export function DashboardClient({
   const [deleteModal, setDeleteModal] = useState<Gallery | null>(null);
 
   useEffect(() => setOrigin(window.location.origin), []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      setPaymentBanner(true);
+      window.history.replaceState({}, '', '/dashboard');
+    }
+  }, []);
 
   const load = useCallback(async () => {
     const res = await fetch('/api/galleries');
@@ -75,6 +85,13 @@ export function DashboardClient({
       </div>
 
       <div className="dash">
+        {paymentBanner && (
+          <div className="banner" style={{ background: '#e8f5e9' }}>
+            <span className="banner__text">
+              Payment received — your account is now active. Welcome to Mantel!
+            </span>
+          </div>
+        )}
         {!active ? (
           <ActivatePanel onActivated={() => router.refresh()} />
         ) : (
@@ -192,15 +209,36 @@ export function DashboardClient({
   );
 }
 
-/* ---- account activation via promo code ---- */
+/* ---- account activation — purchase or promo code ---- */
 function ActivatePanel({ onActivated }: { onActivated: () => void }) {
   const [code, setCode] = useState('');
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [promoError, setPromoError] = useState('');
+  const [promoBusy, setPromoBusy] = useState(false);
+  const [buyBusy, setBuyBusy] = useState(false);
+  const [buyError, setBuyError] = useState('');
+
+  async function buy() {
+    setBuyBusy(true);
+    setBuyError('');
+    try {
+      const res = await fetch('/api/square/checkout', { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setBuyError(data.error || 'Could not start checkout.');
+        setBuyBusy(false);
+        return;
+      }
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch {
+      setBuyError('Could not start checkout.');
+      setBuyBusy(false);
+    }
+  }
 
   async function redeem() {
-    setBusy(true);
-    setError('');
+    setPromoBusy(true);
+    setPromoError('');
     const res = await fetch('/api/promo/redeem', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -209,31 +247,38 @@ function ActivatePanel({ onActivated }: { onActivated: () => void }) {
     if (res.ok) onActivated();
     else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || 'Could not redeem that code.');
-      setBusy(false);
+      setPromoError(data.error || 'Could not redeem that code.');
+      setPromoBusy(false);
     }
   }
 
   return (
     <div className="panel" style={{ margin: '2rem auto' }}>
       <h2>Activate your account</h2>
-      <p>
-        Enter a promo code to start your year of hosting. (Paid plans are coming soon.)
+      <p>Get a year of Mantel hosting — create unlimited galleries, share with all your guests.</p>
+
+      <button className="btn" style={{ width: '100%', marginBottom: '0.5rem' }} onClick={buy} disabled={buyBusy}>
+        {buyBusy ? 'Redirecting to checkout…' : 'Purchase 1 year — $20'}
+      </button>
+      {buyError && <p className="err">{buyError}</p>}
+
+      <p style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: '0.85rem', margin: '1.25rem 0 1rem' }}>
+        — or —
       </p>
+
+      <p style={{ fontSize: '0.9rem', color: 'var(--ink-soft)', marginBottom: '0.75rem' }}>Have a promo code?</p>
       <div className="field">
-        <label htmlFor="code">Promo code</label>
         <input
-          id="code"
           value={code}
           onChange={(e) => setCode(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && redeem()}
           placeholder="Enter your code"
         />
       </div>
-      <button className="btn" onClick={redeem} disabled={busy}>
-        {busy ? 'Checking…' : 'Activate'}
+      <button className="btn btn--ghost" onClick={redeem} disabled={promoBusy || !code}>
+        {promoBusy ? 'Checking…' : 'Redeem code'}
       </button>
-      {error && <p className="err">{error}</p>}
+      {promoError && <p className="err">{promoError}</p>}
     </div>
   );
 }
