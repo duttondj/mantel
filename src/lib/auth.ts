@@ -25,11 +25,14 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
-    sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
-      await sendVerificationEmail(user.email, url);
-    },
     sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
       await sendPasswordResetEmail(user.email, url);
+    },
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
+      await sendVerificationEmail(user.email, url);
     },
   },
   // Brute-force protection on auth endpoints (sign-in/up etc). Better Auth
