@@ -8,10 +8,12 @@ import { createHmac, timingSafeEqual, scryptSync, randomBytes } from 'crypto';
  * id — entering one gallery's password never unlocks another.
  */
 
-const SECRET = process.env.SESSION_SECRET!;
-if (!SECRET) {
-  // fail loud at boot rather than silently signing with `undefined`
-  throw new Error('SESSION_SECRET is not set');
+// Lazy: resolved at request time so Next.js can import this module at
+// build time without SESSION_SECRET set. Still fails loud on first use.
+function secret(): string {
+  const s = process.env.SESSION_SECRET;
+  if (!s) throw new Error('SESSION_SECRET is not set');
+  return s;
 }
 
 /* ---- gallery password hashing (scrypt, salted) ---- */
@@ -35,7 +37,7 @@ export function verifyPassword(plain: string, stored: string): boolean {
 // Cookie value proves "this visitor entered the password for gallery X".
 // Format: <galleryId>.<hmac(galleryId)>. No DB lookup needed to verify.
 export function signGalleryAccess(galleryId: string): string {
-  const sig = createHmac('sha256', SECRET).update(galleryId).digest('hex');
+  const sig = createHmac('sha256', secret()).update(galleryId).digest('hex');
   return `${galleryId}.${sig}`;
 }
 
@@ -46,7 +48,7 @@ export function verifyGalleryAccess(
   if (!cookieValue) return false;
   const [id, sig] = cookieValue.split('.');
   if (id !== galleryId || !sig) return false;
-  const expected = createHmac('sha256', SECRET).update(galleryId).digest('hex');
+  const expected = createHmac('sha256', secret()).update(galleryId).digest('hex');
   const a = Buffer.from(sig);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;

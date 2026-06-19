@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # ---- build stage ----
 FROM node:22-slim AS build
 WORKDIR /app
@@ -8,10 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm \
+    npm install
 
 COPY . .
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 # ---- runtime stage ----
 FROM node:22-slim AS run
@@ -37,4 +40,5 @@ COPY --from=build /app/drizzle ./drizzle
 COPY --from=build /app/node_modules ./node_modules
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+# Run migrations on every startup (idempotent), then hand off to the app.
+CMD ["sh", "-c", "node --experimental-strip-types scripts/migrate.ts && exec node server.js"]
