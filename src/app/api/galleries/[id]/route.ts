@@ -28,6 +28,11 @@ export async function PATCH(
     await db.update(galleries).set({ uploadsClosedAt: val }).where(eq(galleries.id, id));
   }
 
+  if ('description' in body) {
+    const val = body.description ? String(body.description).trim().slice(0, 300) || null : null;
+    await db.update(galleries).set({ description: val }).where(eq(galleries.id, id));
+  }
+
   return NextResponse.json({ ok: true });
 }
 

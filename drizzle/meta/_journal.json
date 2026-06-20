@@ -65,5 +65,12 @@
       "tag": "0008_last_upload_at",
       "breakpoints": true
     }
+    ,{
+      "idx": 9,
+      "version": "7",
+      "when": 1781105149320,
+      "tag": "0009_gallery_description",
+      "breakpoints": true
+    }
   ]
 }

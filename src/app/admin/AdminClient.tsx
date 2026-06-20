@@ -184,6 +184,9 @@ export function AdminClient({
         </div>
       </div>
 
+      {/* Promo codes */}
+      <PromoSection codes={promoCodes} onReload={reload} />
+
       {/* Users table */}
       <div className="admin-section">
         <div className="admin-section-header">
@@ -260,12 +263,9 @@ export function AdminClient({
         </div>
       </div>
 
-      {/* Promo codes */}
-      <PromoSection codes={promoCodes} onReload={reload} />
-
       {/* Create user modal */}
       {showCreate && (
-        <div className="modal-backdrop" onClick={() => setShowCreate(false)}>
+        <div className="modal-bg" onClick={() => setShowCreate(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Add account</h3>
             <div className="field">
@@ -289,7 +289,7 @@ export function AdminClient({
               Grant admin access
             </label>
             {createError && <p className="err">{createError}</p>}
-            <div className="modal-actions">
+            <div className="modal__row">
               <button className="btn" onClick={createUser} disabled={createBusy}>
                 {createBusy ? 'Creating…' : 'Create account'}
               </button>
@@ -303,14 +303,14 @@ export function AdminClient({
 
       {/* Delete confirm modal */}
       {deleteTarget && (
-        <div className="modal-backdrop" onClick={() => setDeleteTarget(null)}>
+        <div className="modal-bg" onClick={() => setDeleteTarget(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>Delete account?</h3>
             <p>
               This permanently deletes <strong>{deleteTarget.email}</strong> and all their galleries.
               This cannot be undone.
             </p>
-            <div className="modal-actions">
+            <div className="modal__row">
               <button
                 className="btn btn--danger"
                 onClick={() => deleteUser(deleteTarget.id)}
@@ -444,7 +444,7 @@ function PromoSection({ codes, onReload }: { codes: PromoCode[]; onReload: () =>
       )}
 
       {showCreate && (
-        <div className="modal-backdrop" onClick={() => setShowCreate(false)}>
+        <div className="modal-bg" onClick={() => setShowCreate(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>New promo code</h3>
             <div className="field">
@@ -500,7 +500,7 @@ function PromoSection({ codes, onReload }: { codes: PromoCode[]; onReload: () =>
             </div>
 
             {createError && <p className="err">{createError}</p>}
-            <div className="modal-actions">
+            <div className="modal__row">
               <button className="btn" onClick={create} disabled={createBusy || !newCode}>
                 {createBusy ? 'Creating…' : 'Create code'}
               </button>

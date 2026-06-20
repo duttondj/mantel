@@ -337,6 +337,7 @@ function CreateModal({
 }) {
   const [title, setTitle] = useState('');
   const [password, setPassword] = useState('');
+  const [description, setDescription] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -346,7 +347,7 @@ function CreateModal({
     const res = await fetch('/api/galleries', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, password: password || undefined }),
+      body: JSON.stringify({ title, password: password || undefined, description: description || undefined }),
     });
     if (res.ok) onCreated();
     else {
@@ -378,6 +379,16 @@ function CreateModal({
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Leave blank for an open gallery"
+          />
+        </div>
+        <div className="field">
+          <label htmlFor="desc">Welcome message (optional)</label>
+          <textarea
+            id="desc"
+            value={description}
+            onChange={(e) => setDescription(e.target.value.slice(0, 300))}
+            placeholder="Shown at the top of your gallery"
+            rows={2}
           />
         </div>
         {error && <p className="err">{error}</p>}

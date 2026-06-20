@@ -99,6 +99,7 @@ export const galleries = pgTable('galleries', {
   downloadCount: integer('download_count').notNull().default(0),
   isDemo: boolean('is_demo').notNull().default(false),
   lastUploadAt: timestamp('last_upload_at'),
+  description: text('description'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

@@ -68,6 +68,23 @@ a { color: inherit; }
   font-size: 1rem;
 }
 
+/* gallery description inline edit */
+.gallery-desc { margin-top: 0.75rem; }
+.gallery-desc__placeholder { color: var(--ink-muted); font-style: italic; font-size: 1rem; margin: 0 0 0.4rem; }
+.gallery-desc__edit { margin-top: 0.4rem; }
+.gallery-desc--editing { display: flex; flex-direction: column; gap: 0.4rem; }
+.gallery-desc__textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.5rem 0.6rem;
+  resize: vertical;
+}
+
 /* --- masonry wall --- */
 .wall {
   columns: 3 280px;

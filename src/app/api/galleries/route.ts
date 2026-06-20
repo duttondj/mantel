@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
       id: galleries.id,
       title: galleries.title,
       slug: galleries.slug,
+      description: galleries.description,
       hasPassword: sql<boolean>`${galleries.passwordHash} is not null`,
       uploadsClosedAt: galleries.uploadsClosedAt,
       viewCount: galleries.viewCount,
@@ -50,11 +51,12 @@ export async function POST(req: NextRequest) {
       { status: 403 }
     );
 
-  const { title, password } = await req.json();
+  const { title, password, description } = await req.json();
   const cleanTitle = String(title || '').trim().slice(0, 120);
   if (!cleanTitle)
     return NextResponse.json({ error: 'Give your gallery a name.' }, { status: 400 });
 
+  const cleanDescription = description ? String(description).trim().slice(0, 300) || null : null;
   const passwordHash =
     password && String(password).length > 0 ? hashPassword(String(password)) : null;
 
@@ -71,7 +73,7 @@ export async function POST(req: NextRequest) {
 
   const [created] = await db
     .insert(galleries)
-    .values({ ownerId: session.user.id, title: cleanTitle, slug, passwordHash })
+    .values({ ownerId: session.user.id, title: cleanTitle, slug, passwordHash, description: cleanDescription })
     .returning({ id: galleries.id, slug: galleries.slug, title: galleries.title });
 
   return NextResponse.json({ gallery: created });

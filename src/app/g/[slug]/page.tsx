@@ -11,6 +11,7 @@ import { DeletePostButton } from '@/components/DeletePostButton';
 import { PostCarousel } from '@/components/PostCarousel';
 import { EditMessageButton } from '@/components/EditMessageButton';
 import { GalleryLightbox, type LightboxImage } from '@/components/GalleryLightbox';
+import { EditDescriptionInline } from '@/components/EditDescriptionInline';
 import { UnlockForm } from './UnlockForm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -83,6 +84,7 @@ export default async function GalleryPage({
     .select({
       id: galleries.id,
       title: galleries.title,
+      description: galleries.description,
       passwordHash: galleries.passwordHash,
       uploadsClosedAt: galleries.uploadsClosedAt,
       ownerId: galleries.ownerId,
@@ -222,7 +224,10 @@ export default async function GalleryPage({
       <header className="masthead">
         <p className="masthead__eyebrow">{gallery.isDemo ? 'Demo gallery' : 'A shared album'}</p>
         <h1 className="masthead__title">{gallery.title}</h1>
-        <p className="masthead__sub">Every guest&rsquo;s view of the day, in one place.</p>
+        {isOwner && !gallery.isDemo
+          ? <EditDescriptionInline galleryId={gallery.id} initialDescription={gallery.description} />
+          : gallery.description && <p className="masthead__sub">{gallery.description}</p>
+        }
       </header>
 
       {!gallery.isDemo && <UploadComposer slug={slug} uploadsClosed={uploadsClosed} />}
