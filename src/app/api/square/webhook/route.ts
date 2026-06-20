@@ -19,8 +19,6 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get('x-square-hmacsha256-signature') ?? '';
   const signatureKey = process.env.SQUARE_WEBHOOK_SECRET ?? '';
 
-  console.log(`[square] webhook received, sig=${signature.slice(0, 10)}…, url=${WEBHOOK_URL}`);
-
   if (signatureKey) {
     const valid = await WebhooksHelper.verifySignature({
       requestBody: body,
@@ -41,16 +39,12 @@ export async function POST(req: NextRequest) {
     return new NextResponse('Bad request', { status: 400 });
   }
 
-  console.log(`[square] event type: ${event.type}`);
-
   if (event.type !== 'payment.updated') {
     return new NextResponse('OK', { status: 200 });
   }
 
   const payment = (event as { data?: { object?: { payment?: { status?: string; orderId?: string; note?: string } } } })
     .data?.object?.payment;
-
-  console.log(`[square] payment status=${payment?.status} orderId=${payment?.orderId} note=${payment?.note}`);
 
   if (payment?.status !== 'COMPLETED') {
     return new NextResponse('OK', { status: 200 });
@@ -60,17 +54,14 @@ export async function POST(req: NextRequest) {
     const client = squareClient();
     let userId: string | null | undefined = payment.note ?? undefined;
 
-    // Try order.referenceId first; fall back to paymentNote
+    // paymentNote is the primary lookup; order.referenceId is the fallback
     if (!userId && payment.orderId) {
       const orderRes = await client.orders.get({ orderId: payment.orderId });
       userId = orderRes.order?.referenceId;
-      console.log(`[square] order referenceId=${userId}`);
     }
 
-    console.log(`[square] resolved userId=${userId}`);
-
     if (!userId) {
-      console.error('[square] no referenceId on order', payment.orderId);
+      console.error('[square] could not resolve userId for payment', payment.orderId);
       return new NextResponse('OK', { status: 200 });
     }
 
