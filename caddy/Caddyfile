@@ -1,0 +1,6 @@
+{$APP_DOMAIN} {
+	tls {
+		dns cloudflare {$CF_API_TOKEN}
+	}
+	reverse_proxy app:3000
+}

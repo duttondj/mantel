@@ -77,16 +77,22 @@ Seeded promo codes: `***REMOVED***` (25 uses, 1 year) and `***REMOVED***` (unlim
 | MinIO API     | 19000     | (internal S3 API)          |
 | MinIO console | 19001     | http://localhost:19001     |
 
-### Internet access via Cloudflare Tunnel
+### Internet access via Cloudflare proxy + DDNS
 
-The Makefile's `make up` already includes the tunnel overlay. Set up once:
+Mantel uses Caddy as a reverse proxy and `cloudflare-ddns` to keep the DNS A record pointing at your home IP. Cloudflare's proxy sits in front (orange cloud on), which hides your real IP and provides DDoS protection. Set up once:
 
-1. Create a tunnel in the Cloudflare dashboard (Zero Trust → Networks → Tunnels)
-2. Copy the tunnel token into `.env` as `CLOUDFLARE_TUNNEL_TOKEN`
-3. Set `APP_URL=https://your.domain` in `.env`
-4. Run `make up`
+1. In Cloudflare dashboard, set SSL/TLS mode to **Full (Strict)**
+2. Create a Cloudflare API token with **Zone → DNS → Edit** permission for your domain
+3. Forward ports **80** and **443** on your router to the server
+4. In `.env`, set:
+   ```
+   APP_URL=https://yourdomain.com
+   APP_DOMAIN=yourdomain.com
+   CF_API_TOKEN=your_token_here
+   ```
+5. Run `make up`
 
-No router port-forwarding needed. HTTPS is handled by Cloudflare.
+Caddy automatically provisions a Let's Encrypt certificate via DNS-01 challenge (using the same CF API token). The `cloudflare-ddns` container updates the A record whenever your public IP changes — no static IP needed.
 
 ### LAN-only (no tunnel)
 

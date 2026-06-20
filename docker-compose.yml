@@ -1,14 +1,11 @@
 services:
   app:
     build: .
-    # bind to 0.0.0.0 so other machines on your LAN can reach it.
-    # access from another PC at: http://<server-lan-ip>:13000
+    # Port 13000 for direct LAN access only — internet traffic goes via Caddy.
     ports:
-      - '0.0.0.0:13000:3000'
+      - '127.0.0.1:13000:3000'
     environment:
       DATABASE_URL: postgres://mantel:${DB_PASSWORD}@db:5432/mantel
-      # app -> minio talks over the internal docker network, NOT the
-      # published host port, so this stays on 9000.
       S3_ENDPOINT: http://minio:9000
       S3_BUCKET: photos
       S3_REGION: us-east-1
@@ -16,8 +13,6 @@ services:
       S3_SECRET_KEY: ${MINIO_PASSWORD}
       SESSION_SECRET: ${SESSION_SECRET}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
-      # APP_URL must be reachable by the browser. For LAN access set this
-      # in .env to http://<server-lan-ip>:13000
       APP_URL: ${APP_URL:-http://localhost:13000}
       RESEND_API_KEY: ${RESEND_API_KEY}
       RESEND_FROM: ${RESEND_FROM:-Mantel <noreply@mantel.wedding>}
@@ -33,6 +28,39 @@ services:
         condition: service_healthy
       createbucket:
         condition: service_completed_successfully
+    restart: unless-stopped
+
+  caddy:
+    build: ./caddy
+    ports:
+      - '0.0.0.0:80:80'
+      - '0.0.0.0:443:443'
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      CF_API_TOKEN: ${CF_API_TOKEN}
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  cloudflare-ddns:
+    image: favonia/cloudflare-ddns:latest
+    network_mode: host
+    cap_drop:
+      - all
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      CLOUDFLARE_API_TOKEN: ${CF_API_TOKEN}
+      DOMAINS: ${APP_DOMAIN}
+      PROXIED: "true"
+      IP6_PROVIDER: "none"
     restart: unless-stopped
 
   db:
@@ -57,8 +85,6 @@ services:
       MINIO_ROOT_USER: ${MINIO_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     ports:
-      # 19000 = S3 API, 19001 = web console. Both on the 10000+ range to
-      # avoid colliding with other docker stacks on your home server.
       - '0.0.0.0:19000:9000'
       - '0.0.0.0:19001:9001'
     volumes:
@@ -71,7 +97,6 @@ services:
     restart: unless-stopped
 
   # one-shot: creates the photos bucket on first boot, then exits.
-  # MinIO does NOT auto-create buckets, so without this the first upload fails.
   createbucket:
     image: minio/mc
     depends_on:
@@ -87,3 +112,4 @@ services:
 volumes:
   db_data:
   minio_data:
+  caddy_data:

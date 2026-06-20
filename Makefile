@@ -1,4 +1,4 @@
-COMPOSE = docker compose -f docker-compose.yml -f docker-compose.tunnel.yml
+COMPOSE = docker compose -f docker-compose.yml
 
 up:
 	$(COMPOSE) up -d --build
@@ -18,14 +18,14 @@ migrate:
 seed:
 	$(COMPOSE) exec app npm run db:seed
 
+seed-demo:
+	$(COMPOSE) exec app npm run seed:demo
+
 purge:
 	$(COMPOSE) exec app npm run purge
 
 purge-commit:
 	$(COMPOSE) exec app npm run purge -- --commit
-
-seed-demo:
-	$(COMPOSE) exec app npm run seed:demo
 
 remind:
 	$(COMPOSE) exec app npm run remind

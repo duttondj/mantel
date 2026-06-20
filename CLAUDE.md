@@ -11,14 +11,14 @@ unlock a gallery.
 - Dev: `npm run dev` (needs a reachable Postgres — easiest via the db container)
 - Build: `npm run build`  ·  Typecheck: `npx tsc --noEmit`
 - **Preferred deploy shortcuts (use these):**
-  - `make up` — build + start full stack with Cloudflare Tunnel
+  - `make up` — build + start full stack (Caddy + DDNS + app)
   - `make down` / `make restart` / `make logs` / `make ps`
   - `make migrate` — run pending DB migrations
   - `make seed` — seed initial promo codes
   - `make seed-demo` — populate the demo gallery (`/g/demo`) with photos + fake posts
   - `make purge` / `make purge-commit` — dry-run / commit data purge
   - `make remind` — send expiry reminder emails manually
-- Raw compose (LAN only, no tunnel): `docker compose up -d --build`
+- Raw compose: `docker compose up -d --build`
 - Regenerate migration after schema change: `npx drizzle-kit generate`
 
 ## Stack
@@ -73,13 +73,9 @@ except Square and Resend.
   Scripts run under raw Node `--experimental-strip-types`, which won't resolve
   extensionless imports even though Next's bundler does. `tsconfig.json` has
   `allowImportingTsExtensions: true` to keep `tsc` happy with this.
-- **`APP_URL` must match how the browser actually reaches the app** (LAN IP+port
-  for LAN, `https://domain` for the tunnel). Better Auth validates against it
-  and QR/share links are built from it. Wrong value = broken auth or QR codes
-  pointing nowhere. Most common deploy mistake. Also used by the image route to
-  construct the redirect target — wrong value = broken redirects.
-- **`secure` cookies need HTTPS** — they don't function over plain-HTTP LAN.
-  They start working once behind the Cloudflare Tunnel.
+- **`APP_URL` must match how the browser actually reaches the app** (`https://yourdomain.com` in production). Better Auth validates against it and QR/share links are built from it. Wrong value = broken auth or QR codes pointing nowhere. Most common deploy mistake. Also used by the image route to construct the redirect target — wrong value = broken redirects.
+- **`APP_DOMAIN` is separate from `APP_URL`** — it's the bare hostname (`yourdomain.com`), used by Caddy for TLS cert issuance and by `cloudflare-ddns` to update the A record. Both must be set.
+- **`secure` cookies need HTTPS** — they don't function over plain-HTTP LAN. Fine in production behind Caddy.
 - **Ports are in the 10000+ range** (app 13000, MinIO 19000/19001) to avoid
   colliding with other stacks on the home server. Internal container ports are
   still standard (app 3000, minio 9000).
