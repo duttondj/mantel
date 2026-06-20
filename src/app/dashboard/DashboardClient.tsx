@@ -215,8 +215,17 @@ export function DashboardClient({
 function PaymentProcessingPanel() {
   const router = useRouter();
   useEffect(() => {
-    const t = setTimeout(() => router.refresh(), 3000);
-    return () => clearTimeout(t);
+    const interval = setInterval(async () => {
+      const res = await fetch('/api/me');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.active) {
+          clearInterval(interval);
+          router.refresh();
+        }
+      }
+    }, 2000);
+    return () => clearInterval(interval);
   }, [router]);
 
   return (
