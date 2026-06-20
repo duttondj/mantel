@@ -1,7 +1,37 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLightbox } from './GalleryLightbox';
+
+function VideoThumb({ src, style, onClick }: { src: string; style?: React.CSSProperties; onClick?: () => void }) {
+  const ref = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    const onSeeked = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = v.videoWidth || 320;
+        c.height = v.videoHeight || 240;
+        c.getContext('2d')?.drawImage(v, 0, 0, c.width, c.height);
+        const url = c.toDataURL('image/jpeg', 0.8);
+        if (url.length > 100) v.poster = url;
+      } catch { /* codec or cross-origin issue */ }
+    };
+    const onMeta = () => { v.currentTime = 0.001; };
+    v.addEventListener('loadedmetadata', onMeta);
+    v.addEventListener('seeked', onSeeked);
+    return () => {
+      v.removeEventListener('loadedmetadata', onMeta);
+      v.removeEventListener('seeked', onSeeked);
+    };
+  }, [src]);
+
+  return (
+    <video ref={ref} src={src} controls preload="metadata" playsInline style={style} onClick={onClick} />
+  );
+}
 
 type Media = { publicId: string; mimeType: string; width?: number | null; height?: number | null };
 
@@ -37,12 +67,9 @@ export function PostCarousel({
   const mediaEl = (item: Media, localIdx: number) => {
     const canOpen = lb && startIndex !== undefined;
     return item.mimeType.startsWith('video/') ? (
-      <video
+      <VideoThumb
         key={item.publicId}
         src={`/i/${item.publicId}`}
-        controls
-        preload="metadata"
-        playsInline
         style={canOpen ? { cursor: 'pointer' } : undefined}
         onClick={canOpen ? () => openLightbox(localIdx) : undefined}
       />

@@ -95,6 +95,8 @@ export const galleries = pgTable('galleries', {
   // null = open gallery. Otherwise a hash (never the plaintext password).
   passwordHash: text('password_hash'),
   uploadsClosedAt: timestamp('uploads_closed_at'),
+  viewCount: integer('view_count').notNull().default(0),
+  downloadCount: integer('download_count').notNull().default(0),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

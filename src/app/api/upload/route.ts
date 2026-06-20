@@ -53,8 +53,8 @@ export async function POST(req: NextRequest) {
   const files = form.getAll('files').filter((f): f is File => f instanceof File);
 
   if (!slug) return NextResponse.json({ error: 'Missing gallery.' }, { status: 400 });
-  if (files.length === 0)
-    return NextResponse.json({ error: 'Add at least one photo or video.' }, { status: 400 });
+  if (files.length === 0 && !message)
+    return NextResponse.json({ error: 'Add a photo, video, or message.' }, { status: 400 });
   if (files.length > MAX_FILES)
     return NextResponse.json(
       { error: `That's more than ${MAX_FILES} files in one post.` },
@@ -131,7 +131,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (stored.length === 0)
+  // if files were provided but all failed, only proceed if there's a message to save
+  if (stored.length === 0 && files.length > 0 && !message)
     return NextResponse.json(
       {
         error:
@@ -142,7 +143,7 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
 
-  // now create the post and attach the media that succeeded
+  // create the post; images are optional (text-only posts have none)
   const [post] = await db
     .insert(posts)
     .values({ galleryId: gallery.id, guestName, message })

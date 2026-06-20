@@ -37,5 +37,12 @@
       "tag": "0004_expiry_reminders",
       "breakpoints": true
     }
+    ,{
+      "idx": 5,
+      "version": "7",
+      "when": 1781105149316,
+      "tag": "0005_gallery_stats",
+      "breakpoints": true
+    }
   ]
 }

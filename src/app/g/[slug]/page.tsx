@@ -1,6 +1,6 @@
 import { db } from '@/db';
 import { galleries, posts, images, likes, user as userTable } from '@/db/schema';
-import { eq, desc, inArray, count, and } from 'drizzle-orm';
+import { eq, desc, inArray, count, and, sql } from 'drizzle-orm';
 import { cookies, headers } from 'next/headers';
 import { verifyGalleryAccess, galleryCookieName } from '@/lib/gallery-auth';
 import { isEntitled } from '@/lib/entitlements';
@@ -71,9 +71,15 @@ export default async function GalleryPage({
   // never see them.
   const session = await auth.api.getSession({ headers: await headers() });
   const isOwner = session?.user?.id === gallery.ownerId;
+
+  // fire-and-forget view count — don't slow down page render
+  db.update(galleries)
+    .set({ viewCount: sql`${galleries.viewCount} + 1` })
+    .where(eq(galleries.id, gallery.id))
+    .catch(() => {});
   const uploadsClosed = !!(gallery.uploadsClosedAt && gallery.uploadsClosedAt <= new Date());
 
-  // load posts with their media
+  // load posts with their media (leftJoin so text-only posts appear)
   const rows = await db
     .select({
       postId: posts.id,
@@ -86,7 +92,7 @@ export default async function GalleryPage({
       height: images.height,
     })
     .from(posts)
-    .innerJoin(images, eq(images.postId, posts.id))
+    .leftJoin(images, eq(images.postId, posts.id))
     .where(eq(posts.galleryId, gallery.id))
     .orderBy(desc(posts.createdAt));
 
@@ -103,7 +109,9 @@ export default async function GalleryPage({
   for (const r of rows) {
     if (!byPost.has(r.postId))
       byPost.set(r.postId, { postId: r.postId, guestName: r.guestName, message: r.message, images: [] });
-    byPost.get(r.postId)!.images.push({ publicId: r.publicId, mimeType: r.mimeType, width: r.width, height: r.height });
+    // leftJoin: publicId is null for text-only posts
+    if (r.publicId)
+      byPost.get(r.postId)!.images.push({ publicId: r.publicId, mimeType: r.mimeType!, width: r.width, height: r.height });
   }
 
   // flat image list for the lightbox, with per-post start indices
@@ -183,7 +191,9 @@ export default async function GalleryPage({
                       initialCount={likeCounts.get(post.postId) ?? 0}
                       initialLiked={guestLikedSet.has(post.postId)}
                     />
-                    <ShareButtons publicId={post.images[0].publicId} />
+                    {post.images.length > 0 && (
+                      <ShareButtons publicId={post.images[0].publicId} />
+                    )}
                   </div>
                   {isOwner && <DeletePostButton postId={post.postId} />}
                 </div>

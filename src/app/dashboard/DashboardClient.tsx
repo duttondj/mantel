@@ -12,6 +12,8 @@ type Gallery = {
   hasPassword: boolean;
   uploadsClosedAt: string | null;
   postCount: number;
+  viewCount: number;
+  downloadCount: number;
 };
 
 export function DashboardClient({
@@ -137,6 +139,10 @@ export function DashboardClient({
                           {g.hasPassword ? 'Password' : 'Open'}
                         </span>
                         <span>{g.postCount} {g.postCount === 1 ? 'post' : 'posts'}</span>
+                        <span>{g.viewCount} {g.viewCount === 1 ? 'view' : 'views'}</span>
+                        {g.downloadCount > 0 && (
+                          <span>{g.downloadCount} {g.downloadCount === 1 ? 'download' : 'downloads'}</span>
+                        )}
                       </div>
 
                       {origin && <QR url={link} label={g.title} />}

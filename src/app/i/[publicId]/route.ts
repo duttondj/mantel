@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { images, posts, galleries } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getObjectStream } from '@/lib/storage';
 import {
   verifyGalleryAccess,
@@ -69,6 +69,12 @@ export async function GET(
 
   // authorized — stream the object back, with Range support for video seeking
   const download = req.nextUrl.searchParams.get('download') === '1';
+  if (download) {
+    db.update(galleries)
+      .set({ downloadCount: sql`${galleries.downloadCount} + 1` })
+      .where(eq(galleries.id, row.galleryId))
+      .catch(() => {});
+  }
   const rangeHeader = req.headers.get('range') ?? undefined;
   const obj = await getObjectStream(row.storageKey, rangeHeader);
   const body = obj.Body as unknown as ReadableStream;

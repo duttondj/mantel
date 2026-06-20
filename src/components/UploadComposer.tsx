@@ -92,8 +92,8 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
   }
 
   async function submit() {
-    if (previews.length === 0) {
-      setError('Add at least one photo or video.');
+    if (previews.length === 0 && !message.trim()) {
+      setError('Add a photo, video, or message.');
       return;
     }
     setBusy(true);
@@ -133,7 +133,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
           <p className="upload-closed">Uploads for this gallery have closed.</p>
         ) : (
           <button className="btn btn--sm" onClick={() => setOpen(true)}>
-            Add photos &amp; videos
+            Add photos or a message
           </button>
         )}
       </div>
@@ -144,7 +144,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
             className="modal modal--upload"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3>Add photos & videos</h3>
+            <h3>Add photos or a message</h3>
 
             {/* drop zone / picker */}
             <div
@@ -163,7 +163,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
             >
               <p className="dropzone__text">
                 {previews.length === 0
-                  ? 'Tap to choose photos or videos, or drag them here'
+                  ? 'Tap to add photos or videos (optional)'
                   : `${previews.length} of ${MAX_FILES} added — tap to add more`}
               </p>
               <input
@@ -201,14 +201,14 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
             )}
 
             <div className="field">
-              <label htmlFor="msg">Message (optional)</label>
+              <label htmlFor="msg">Message</label>
               <textarea
                 id="msg"
                 rows={2}
                 value={message}
                 maxLength={MAX_MESSAGE}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Say something about these…"
+                placeholder="Say something…"
               />
               <div className={'counter' + (remaining <= 20 ? ' counter--low' : '')}>
                 {remaining}
@@ -241,7 +241,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
               <button
                 className="btn btn--sm"
                 onClick={submit}
-                disabled={busy || previews.length === 0}
+                disabled={busy || (previews.length === 0 && !message.trim())}
               >
                 {busy ? 'Posting…' : 'Post'}
               </button>

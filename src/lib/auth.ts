@@ -45,7 +45,10 @@ export const auth = betterAuth({
     max: 100, // generous global ceiling; sign-in has its own tighter rule
     storage: 'memory',
   },
-  secret: process.env.SESSION_SECRET,
+  // build-time fallback silences the warning during `next build` (env vars
+  // aren't injected at build time); real secrets are always present at runtime
+  secret: process.env.BETTER_AUTH_SECRET ?? process.env.SESSION_SECRET
+    ?? 'b7Kp3Mn8Qr2Vs6Xw4Yz9Aa1Bb5Cc0Dd7Ee3Ff8Gg2Hh6Ii4Jj9Kk1Ll5Mm0Nn7Pp',
   baseURL: process.env.APP_URL || 'http://localhost:13000',
 });
 

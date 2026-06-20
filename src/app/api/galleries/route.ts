@@ -19,6 +19,8 @@ export async function GET(req: NextRequest) {
       slug: galleries.slug,
       hasPassword: sql<boolean>`${galleries.passwordHash} is not null`,
       uploadsClosedAt: galleries.uploadsClosedAt,
+      viewCount: galleries.viewCount,
+      downloadCount: galleries.downloadCount,
       createdAt: galleries.createdAt,
       postCount: sql<number>`count(${posts.id})::int`,
     })
