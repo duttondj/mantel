@@ -4,6 +4,17 @@ import { useState, useCallback } from 'react';
 import { signOut } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
 
+type PromoCode = {
+  code: string;
+  grantsPlan: string;
+  durationDays: number | null;
+  maxUses: number | null;
+  usedCount: number;
+  expiresAt: string | null;
+  active: boolean;
+  createdAt: string;
+};
+
 type User = {
   id: string;
   email: string;
@@ -37,14 +48,17 @@ export function AdminClient({
   currentUserId,
   initialUsers,
   initialStats,
+  initialPromoCodes,
 }: {
   currentUserId: string;
   initialUsers: User[];
   initialStats: Stats;
+  initialPromoCodes: PromoCode[];
 }) {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>(initialUsers);
   const [stats, setStats] = useState<Stats>(initialStats);
+  const [promoCodes, setPromoCodes] = useState<PromoCode[]>(initialPromoCodes);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -61,12 +75,14 @@ export function AdminClient({
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
 
   const reload = useCallback(async () => {
-    const [usersRes, statsRes] = await Promise.all([
+    const [usersRes, statsRes, promoRes] = await Promise.all([
       fetch('/api/admin/users'),
       fetch('/api/admin/stats'),
+      fetch('/api/admin/promo'),
     ]);
     if (usersRes.ok) setUsers(await usersRes.json());
     if (statsRes.ok) setStats(await statsRes.json());
+    if (promoRes.ok) setPromoCodes(await promoRes.json());
   }, []);
 
   async function patch(userId: string, body: object) {
@@ -244,6 +260,9 @@ export function AdminClient({
         </div>
       </div>
 
+      {/* Promo codes */}
+      <PromoSection codes={promoCodes} onReload={reload} />
+
       {/* Create user modal */}
       {showCreate && (
         <div className="modal-backdrop" onClick={() => setShowCreate(false)}>
@@ -302,6 +321,190 @@ export function AdminClient({
               <button className="btn btn--ghost" onClick={() => setDeleteTarget(null)}>
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---- promo code management ---- */
+function PromoSection({ codes, onReload }: { codes: PromoCode[]; onReload: () => Promise<void> }) {
+  const [showCreate, setShowCreate] = useState(false);
+  const [newCode, setNewCode] = useState('');
+  const [forever, setForever] = useState(false);
+  const [unlimited, setUnlimited] = useState(true);
+  const [maxUses, setMaxUses] = useState('1');
+  const [codeExpiresAt, setCodeExpiresAt] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [createBusy, setCreateBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+
+  async function create() {
+    setCreateBusy(true);
+    setCreateError('');
+    const res = await fetch('/api/admin/promo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: newCode,
+        forever,
+        maxUses: unlimited ? null : Number(maxUses),
+        codeExpiresAt: codeExpiresAt || null,
+      }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setCreateError((d as { error?: string }).error || 'Could not create code.');
+    } else {
+      setShowCreate(false);
+      setNewCode(''); setForever(false); setUnlimited(true); setMaxUses('1'); setCodeExpiresAt('');
+      await onReload();
+    }
+    setCreateBusy(false);
+  }
+
+  async function toggle(code: string, active: boolean) {
+    setBusy(code);
+    await fetch(`/api/admin/promo/${encodeURIComponent(code)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active }),
+    });
+    await onReload();
+    setBusy(null);
+  }
+
+  async function remove(code: string) {
+    if (!confirm(`Delete code "${code}"? This cannot be undone.`)) return;
+    setBusy(code);
+    await fetch(`/api/admin/promo/${encodeURIComponent(code)}`, { method: 'DELETE' });
+    await onReload();
+    setBusy(null);
+  }
+
+  return (
+    <div className="admin-section">
+      <div className="admin-section-header">
+        <h2 className="admin-section-title">Promo codes</h2>
+        <button className="btn btn--sm" onClick={() => setShowCreate(true)}>+ New code</button>
+      </div>
+
+      {codes.length === 0 ? (
+        <p style={{ color: 'var(--ink-soft)', fontSize: '0.9rem' }}>No promo codes yet.</p>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Grants</th>
+                <th>Uses</th>
+                <th>Code expires</th>
+                <th>Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {codes.map((c) => (
+                <tr key={c.code} className={busy === c.code ? 'admin-row--busy' : ''}>
+                  <td><code style={{ fontSize: '0.85rem' }}>{c.code}</code></td>
+                  <td>{c.durationDays === null ? 'Forever' : '1 year'}</td>
+                  <td>{c.usedCount}{c.maxUses !== null ? ` / ${c.maxUses}` : ' / ∞'}</td>
+                  <td>{c.expiresAt ? fmtDate(c.expiresAt) : '—'}</td>
+                  <td>
+                    <span className={`admin-status admin-status--${c.active ? 'active' : 'inactive'}`}>
+                      {c.active ? 'yes' : 'no'}
+                    </span>
+                  </td>
+                  <td>
+                    <div className="admin-actions">
+                      <button
+                        className="linkbtn"
+                        disabled={busy === c.code}
+                        onClick={() => toggle(c.code, !c.active)}
+                      >
+                        {c.active ? 'Disable' : 'Enable'}
+                      </button>
+                      <button
+                        className="linkbtn linkbtn--danger"
+                        disabled={busy === c.code}
+                        onClick={() => remove(c.code)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showCreate && (
+        <div className="modal-backdrop" onClick={() => setShowCreate(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>New promo code</h3>
+            <div className="field">
+              <label>Code</label>
+              <input
+                value={newCode}
+                onChange={(e) => setNewCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
+                placeholder="e.g. ***REMOVED***"
+                autoFocus
+              />
+            </div>
+
+            <div className="field">
+              <label>Access granted</label>
+              <div style={{ display: 'flex', gap: '1.25rem', marginTop: '0.35rem' }}>
+                <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', cursor: 'pointer' }}>
+                  <input type="radio" checked={!forever} onChange={() => setForever(false)} />
+                  1 year
+                </label>
+                <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', cursor: 'pointer' }}>
+                  <input type="radio" checked={forever} onChange={() => setForever(true)} />
+                  Forever
+                </label>
+              </div>
+            </div>
+
+            <div className="field">
+              <label>Max redemptions</label>
+              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginTop: '0.35rem', flexWrap: 'wrap' }}>
+                <label style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', cursor: 'pointer' }}>
+                  <input type="checkbox" checked={unlimited} onChange={(e) => setUnlimited(e.target.checked)} />
+                  Unlimited
+                </label>
+                {!unlimited && (
+                  <input
+                    type="number"
+                    min="1"
+                    value={maxUses}
+                    onChange={(e) => setMaxUses(e.target.value)}
+                    style={{ width: '5rem' }}
+                  />
+                )}
+              </div>
+            </div>
+
+            <div className="field">
+              <label>Code expires on (optional)</label>
+              <input
+                type="date"
+                value={codeExpiresAt}
+                onChange={(e) => setCodeExpiresAt(e.target.value)}
+              />
+            </div>
+
+            {createError && <p className="err">{createError}</p>}
+            <div className="modal-actions">
+              <button className="btn" onClick={create} disabled={createBusy || !newCode}>
+                {createBusy ? 'Creating…' : 'Create code'}
+              </button>
+              <button className="btn btn--ghost" onClick={() => setShowCreate(false)}>Cancel</button>
             </div>
           </div>
         </div>

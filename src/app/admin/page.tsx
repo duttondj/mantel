@@ -1,6 +1,6 @@
 import { auth } from '@/lib/auth';
 import { db } from '@/db';
-import { user as userTable, galleries, images } from '@/db/schema';
+import { user as userTable, galleries, images, promoCodes } from '@/db/schema';
 import { count, desc, eq, sum } from 'drizzle-orm';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -18,7 +18,7 @@ export default async function AdminPage() {
 
   if (!me?.isAdmin) redirect('/dashboard');
 
-  const [users, [{ users: userCount }], [{ gals: galleryCount }], [{ bytes }]] =
+  const [users, [{ users: userCount }], [{ gals: galleryCount }], [{ bytes }], codes] =
     await Promise.all([
       db
         .select({
@@ -48,6 +48,7 @@ export default async function AdminPage() {
       db.select({ users: count() }).from(userTable),
       db.select({ gals: count() }).from(galleries),
       db.select({ bytes: sum(images.fileSize) }).from(images),
+      db.select().from(promoCodes).orderBy(desc(promoCodes.createdAt)),
     ]);
 
   return (
@@ -63,6 +64,11 @@ export default async function AdminPage() {
         galleries: galleryCount,
         storedBytes: Number(bytes ?? 0),
       }}
+      initialPromoCodes={codes.map((c) => ({
+        ...c,
+        expiresAt: c.expiresAt?.toISOString() ?? null,
+        createdAt: c.createdAt.toISOString(),
+      }))}
     />
   );
 }

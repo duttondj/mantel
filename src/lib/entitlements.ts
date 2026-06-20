@@ -12,10 +12,12 @@ import { eq, sql } from 'drizzle-orm';
  */
 export async function grantAccess(
   userId: string,
-  opts: { plan: 'paid' | 'comped'; durationDays?: number }
+  opts: { plan: 'paid' | 'comped'; durationDays?: number | null }
 ) {
-  const durationDays = opts.durationDays ?? 365;
-  const expiresAt = new Date(Date.now() + durationDays * 86_400_000);
+  // null = lifetime access; undefined falls back to 365 days
+  const expiresAt = opts.durationDays === null
+    ? null
+    : new Date(Date.now() + (opts.durationDays ?? 365) * 86_400_000);
   await db
     .update(user)
     .set({ plan: opts.plan, expiresAt, status: 'active' })
@@ -34,7 +36,7 @@ export async function redeemPromoCode(
   userId: string,
   rawCode: string
 ): Promise<
-  | { ok: true; expiresAt: Date }
+  | { ok: true; expiresAt: Date | null }
   | { ok: false; reason: 'not_found' | 'inactive' | 'expired' | 'used_up' | 'already_redeemed' }
 > {
   const code = rawCode.trim().toUpperCase();
@@ -67,8 +69,9 @@ export async function redeemPromoCode(
       .set({ usedCount: sql`${promoCodes.usedCount} + 1` })
       .where(eq(promoCodes.code, code));
 
-    const durationDays = promo.durationDays;
-    const expiresAt = new Date(Date.now() + durationDays * 86_400_000);
+    const expiresAt = promo.durationDays === null
+      ? null
+      : new Date(Date.now() + promo.durationDays * 86_400_000);
     await tx
       .update(user)
       .set({ plan: promo.grantsPlan as 'comped', expiresAt, status: 'active' })
@@ -88,6 +91,6 @@ export function isEntitled(u: {
   expiresAt: Date | null;
 }): boolean {
   if (u.status !== 'active') return false;
-  if (!u.expiresAt) return false;
+  if (u.expiresAt === null) return true; // lifetime / forever plan
   return u.expiresAt > new Date();
 }

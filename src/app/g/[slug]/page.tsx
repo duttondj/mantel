@@ -15,6 +15,60 @@ import { GalleryLightbox, type LightboxImage } from '@/components/GalleryLightbo
 import { UnlockForm } from './UnlockForm';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
+
+function formatPostTime(date: Date): string {
+  const diffMs = Date.now() - date.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const [gallery] = await db
+    .select({ title: galleries.title, passwordHash: galleries.passwordHash })
+    .from(galleries)
+    .where(eq(galleries.slug, slug));
+
+  if (!gallery) return {};
+
+  const meta: Metadata = {
+    title: `${gallery.title} · Mantel`,
+    openGraph: {
+      title: gallery.title,
+      description: 'A shared album — add your photos and memories.',
+      type: 'website',
+    },
+  };
+
+  // OG image only for open galleries — scrapers can't get past the lock
+  if (!gallery.passwordHash) {
+    const [firstImg] = await db
+      .select({ publicId: images.publicId })
+      .from(images)
+      .innerJoin(posts, eq(images.postId, posts.id))
+      .innerJoin(galleries, eq(posts.galleryId, galleries.id))
+      .where(and(eq(galleries.slug, slug), sql`${images.mimeType} like 'image/%'`))
+      .orderBy(desc(images.createdAt))
+      .limit(1);
+    if (firstImg) {
+      const appUrl = process.env.APP_URL || 'http://localhost:13000';
+      meta.openGraph!.images = [`${appUrl}/i/${firstImg.publicId}`];
+    }
+  }
+
+  return meta;
+}
 
 export default async function GalleryPage({
   params,
@@ -103,12 +157,13 @@ export default async function GalleryPage({
       postId: string;
       guestName: string | null;
       message: string | null;
+      createdAt: Date;
       images: { publicId: string; mimeType: string; width: number | null; height: number | null }[];
     }
   >();
   for (const r of rows) {
     if (!byPost.has(r.postId))
-      byPost.set(r.postId, { postId: r.postId, guestName: r.guestName, message: r.message, images: [] });
+      byPost.set(r.postId, { postId: r.postId, guestName: r.guestName, message: r.message, createdAt: r.createdAt, images: [] });
     // leftJoin: publicId is null for text-only posts
     if (r.publicId)
       byPost.get(r.postId)!.images.push({ publicId: r.publicId, mimeType: r.mimeType!, width: r.width, height: r.height });
@@ -185,6 +240,7 @@ export default async function GalleryPage({
                     : post.message && <p className="post__msg">{post.message}</p>
                   }
                   {post.guestName && <p className="post__byline">{post.guestName}</p>}
+                  <p className="post__time">{formatPostTime(post.createdAt)}</p>
                   <div className="post__actions">
                     <LikeButton
                       postId={post.postId}

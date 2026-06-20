@@ -103,7 +103,10 @@ export function DashboardClient({
             <div className="banner">
               <span className="banner__text">
                 Your account is <strong>active</strong>
-                {expiryLabel && <> — hosting through <strong>{expiryLabel}</strong>.</>}
+                {expiryLabel
+                  ? <> — hosting through <strong>{expiryLabel}</strong>.</>
+                  : <> — <strong>lifetime access</strong>.</>
+                }
                 {plan === 'comped' && <> (comped)</>}
               </span>
             </div>

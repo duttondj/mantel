@@ -44,5 +44,12 @@
       "tag": "0005_gallery_stats",
       "breakpoints": true
     }
+    ,{
+      "idx": 6,
+      "version": "7",
+      "when": 1781105149317,
+      "tag": "0006_promo_forever",
+      "breakpoints": true
+    }
   ]
 }

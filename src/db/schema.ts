@@ -155,7 +155,8 @@ export const promoCodes = pgTable('promo_codes', {
   code: text('code').primaryKey(),
   // what redeeming grants — usually 'comped' for friends & family
   grantsPlan: text('grants_plan').notNull().default('comped'),
-  durationDays: integer('duration_days').notNull().default(365),
+  // null = lifetime access (never expires)
+  durationDays: integer('duration_days').default(365),
   // null = unlimited uses
   maxUses: integer('max_uses'),
   usedCount: integer('used_count').notNull().default(0),

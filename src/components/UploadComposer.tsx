@@ -26,6 +26,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
   const [name, setName] = useState('');
   const [dragging, setDragging] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -83,6 +84,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
     setMessage('');
     setError('');
     setBusy(false);
+    setProgress(null);
   }
 
   function close() {
@@ -98,6 +100,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
     }
     setBusy(true);
     setError('');
+    setProgress(0);
 
     const fd = new FormData();
     fd.set('slug', slug);
@@ -106,11 +109,27 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
     previews.forEach((p) => fd.append('files', p.file));
 
     try {
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Upload failed. Please try again.');
-      }
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.upload.addEventListener('progress', (e) => {
+          if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
+        });
+        xhr.addEventListener('load', () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              reject(new Error(data.error || 'Upload failed. Please try again.'));
+            } catch {
+              reject(new Error('Upload failed. Please try again.'));
+            }
+          }
+        });
+        xhr.addEventListener('error', () => reject(new Error('Upload failed. Please try again.')));
+        xhr.open('POST', '/api/upload');
+        xhr.send(fd);
+      });
       // remember the name for next time (1 year)
       if (name.trim()) {
         document.cookie = `${NAME_COOKIE}=${encodeURIComponent(name.trim())}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
@@ -121,6 +140,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong.');
       setBusy(false);
+      setProgress(null);
     }
   }
 
@@ -226,6 +246,15 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
               />
             </div>
 
+            {progress !== null && (
+              <div className="upload-progress">
+                <div className="upload-progress__bar" style={{ width: `${progress}%` }} />
+                <span className="upload-progress__label">
+                  {progress < 100 ? `${progress}%` : 'Processing…'}
+                </span>
+              </div>
+            )}
+
             {error && <p className="err">{error}</p>}
 
             <p className="upload-privacy">
@@ -243,7 +272,9 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
                 onClick={submit}
                 disabled={busy || (previews.length === 0 && !message.trim())}
               >
-                {busy ? 'Posting…' : 'Post'}
+                {busy
+                  ? progress !== null && progress < 100 ? `Uploading ${progress}%…` : 'Processing…'
+                  : 'Post'}
               </button>
             </div>
           </div>
