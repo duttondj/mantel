@@ -4,6 +4,7 @@ import {
   GetObjectCommand,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 /*
  * One S3 client, pointed at MinIO today. To migrate to AWS S3 /
@@ -47,4 +48,32 @@ export async function getObjectStream(key: string, range?: string) {
 
 export async function deleteObject(key: string) {
   await s3.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+}
+
+/*
+ * Returns true when S3_ENDPOINT is a public HTTPS cloud endpoint (R2, B2, AWS S3).
+ * False when using the local MinIO container (http://minio:...), which isn't
+ * reachable by browsers — in that case the image route streams bytes instead.
+ */
+export function isCloudStorage(): boolean {
+  const endpoint = process.env.S3_ENDPOINT ?? '';
+  return endpoint.startsWith('https://');
+}
+
+/*
+ * Generates a short-lived presigned GET URL so the browser can fetch
+ * media directly from cloud storage, bypassing the app server entirely.
+ * Only call this when isCloudStorage() is true.
+ */
+export async function getPresignedUrl(
+  key: string,
+  expiresIn = 900,
+  disposition?: string,
+): Promise<string> {
+  const cmd = new GetObjectCommand({
+    Bucket: BUCKET,
+    Key: key,
+    ...(disposition ? { ResponseContentDisposition: disposition } : {}),
+  });
+  return getSignedUrl(s3, cmd, { expiresIn });
 }

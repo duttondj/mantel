@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { images, posts, galleries } from '@/db/schema';
 import { eq, sql } from 'drizzle-orm';
-import { getObjectStream } from '@/lib/storage';
+import { getObjectStream, getPresignedUrl, isCloudStorage } from '@/lib/storage';
 import {
   verifyGalleryAccess,
   galleryCookieName,
@@ -98,14 +98,25 @@ export async function GET(
     return NextResponse.redirect(`${appOrigin}/`, 302);
   }
 
-  // authorized — stream the object back, with Range support for video seeking
-  const download = isDownload;
-  if (download) {
+  // authorized — increment download counter if applicable
+  if (isDownload) {
     db.update(galleries)
       .set({ downloadCount: sql`${galleries.downloadCount} + 1` })
       .where(eq(galleries.id, row.galleryId))
       .catch(() => {});
   }
+
+  // Cloud storage: redirect browser directly to a presigned URL so media
+  // bytes never flow through the app server.
+  if (isCloudStorage()) {
+    const ct = row.storageKey.match(/\.(mp4|mov|webm)$/i) ? 'video/mp4' : 'image/jpeg';
+    const ext = ct.includes('jpeg') ? 'jpg' : ct.split('/')[1] || 'bin';
+    const disposition = isDownload ? `attachment; filename="photo.${ext}"` : undefined;
+    const url = await getPresignedUrl(row.storageKey, 900, disposition);
+    return NextResponse.redirect(url, 302);
+  }
+
+  // Local MinIO: stream the object through the server (MinIO isn't publicly reachable).
   const rangeHeader = req.headers.get('range') ?? undefined;
   const obj = await getObjectStream(row.storageKey, rangeHeader);
   const body = obj.Body as unknown as ReadableStream;
@@ -115,11 +126,10 @@ export async function GET(
 
   const responseHeaders: Record<string, string> = {
     'Content-Type': ct,
-    // private: don't let shared caches hold images for locked galleries
     'Cache-Control': 'private, max-age=3600',
     'Accept-Ranges': 'bytes',
   };
-  if (download) responseHeaders['Content-Disposition'] = `attachment; filename="photo.${ext}"`;
+  if (isDownload) responseHeaders['Content-Disposition'] = `attachment; filename="photo.${ext}"`;
   if (obj.ContentRange) responseHeaders['Content-Range'] = obj.ContentRange;
   if (obj.ContentLength != null) responseHeaders['Content-Length'] = String(obj.ContentLength);
 

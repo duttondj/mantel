@@ -30,7 +30,13 @@ purge-commit:
 remind:
 	$(COMPOSE) exec app npm run remind
 
+migrate-storage:
+	$(COMPOSE) exec app npm run migrate:storage
+
+migrate-storage-commit:
+	$(COMPOSE) exec app npm run migrate:storage -- --commit
+
 ps:
 	$(COMPOSE) ps
 
-.PHONY: up down restart logs migrate seed seed-demo purge purge-commit remind ps
+.PHONY: up down restart logs migrate seed seed-demo purge purge-commit remind migrate-storage migrate-storage-commit ps

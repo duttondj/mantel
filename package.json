@@ -13,10 +13,12 @@
     "db:create-admin": "node --experimental-strip-types scripts/create-admin.ts",
     "purge": "node --experimental-strip-types scripts/purge.ts",
     "remind": "node --experimental-strip-types scripts/remind.ts",
-    "seed:demo": "node --experimental-strip-types scripts/seed-demo.ts"
+    "seed:demo": "node --experimental-strip-types scripts/seed-demo.ts",
+    "migrate:storage": "node --experimental-strip-types scripts/migrate-storage.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.658.0",
+    "@aws-sdk/s3-request-presigner": "^3.1073.0",
     "@types/qrcode": "^1.5.6",
     "archiver": "^7.0.1",
     "better-auth": "^1.2.0",
