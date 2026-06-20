@@ -12,7 +12,8 @@
     "db:seed": "node --experimental-strip-types scripts/seed.ts",
     "db:create-admin": "node --experimental-strip-types scripts/create-admin.ts",
     "purge": "node --experimental-strip-types scripts/purge.ts",
-    "remind": "node --experimental-strip-types scripts/remind.ts"
+    "remind": "node --experimental-strip-types scripts/remind.ts",
+    "seed:demo": "node --experimental-strip-types scripts/seed-demo.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.658.0",

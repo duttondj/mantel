@@ -4,6 +4,12 @@ export async function register() {
   const { default: cron } = await import('node-cron');
   const { runPurge } = await import('@/lib/tasks/purge');
   const { runRemind } = await import('@/lib/tasks/remind');
+  const { runAutoClose } = await import('@/lib/tasks/auto-close');
+
+  // 2:00 AM daily — close galleries idle for AUTO_CLOSE_DAYS (default 14)
+  cron.schedule('0 2 * * *', () => {
+    runAutoClose().catch((e) => console.error('[cron] auto-close failed:', e));
+  });
 
   // 3:00 AM daily — delete data for accounts past the 30-day grace period
   cron.schedule('0 3 * * *', () => {
@@ -15,5 +21,5 @@ export async function register() {
     runRemind().catch((e) => console.error('[cron] remind failed:', e));
   });
 
-  console.log('[cron] Scheduled: purge at 03:00, reminders at 09:00');
+  console.log('[cron] Scheduled: auto-close at 02:00, purge at 03:00, reminders at 09:00');
 }

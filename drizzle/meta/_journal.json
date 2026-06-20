@@ -51,5 +51,19 @@
       "tag": "0006_promo_forever",
       "breakpoints": true
     }
+    ,{
+      "idx": 7,
+      "version": "7",
+      "when": 1781105149318,
+      "tag": "0007_demo_gallery",
+      "breakpoints": true
+    }
+    ,{
+      "idx": 8,
+      "version": "7",
+      "when": 1781105149319,
+      "tag": "0008_last_upload_at",
+      "breakpoints": true
+    }
   ]
 }

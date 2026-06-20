@@ -26,6 +26,7 @@ services:
       SQUARE_WEBHOOK_SECRET: ${SQUARE_WEBHOOK_SECRET:-}
       SQUARE_ENVIRONMENT: ${SQUARE_ENVIRONMENT:-sandbox}
       SQUARE_PRICE_CENTS: ${SQUARE_PRICE_CENTS:-2000}
+      AUTO_CLOSE_DAYS: ${AUTO_CLOSE_DAYS:-14}
       NODE_ENV: production
     depends_on:
       db:

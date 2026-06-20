@@ -97,6 +97,8 @@ export const galleries = pgTable('galleries', {
   uploadsClosedAt: timestamp('uploads_closed_at'),
   viewCount: integer('view_count').notNull().default(0),
   downloadCount: integer('download_count').notNull().default(0),
+  isDemo: boolean('is_demo').notNull().default(false),
+  lastUploadAt: timestamp('last_upload_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 

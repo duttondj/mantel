@@ -5,7 +5,6 @@ import { cookies, headers } from 'next/headers';
 import { verifyGalleryAccess, galleryCookieName } from '@/lib/gallery-auth';
 import { isEntitled } from '@/lib/entitlements';
 import { auth } from '@/lib/auth';
-import { ShareButtons } from '@/components/ShareButtons';
 import { LikeButton } from '@/components/LikeButton';
 import { UploadComposer } from '@/components/UploadComposer';
 import { DeletePostButton } from '@/components/DeletePostButton';
@@ -87,6 +86,7 @@ export default async function GalleryPage({
       passwordHash: galleries.passwordHash,
       uploadsClosedAt: galleries.uploadsClosedAt,
       ownerId: galleries.ownerId,
+      isDemo: galleries.isDemo,
       ownerStatus: userTable.status,
       ownerExpiresAt: userTable.expiresAt,
     })
@@ -212,13 +212,20 @@ export default async function GalleryPage({
   return (
     <>
     <div className="wrap">
+      {gallery.isDemo && (
+        <div className="demo-notice">
+          <span>You&rsquo;re viewing a demo gallery.&nbsp;</span>
+          <Link href="/signin" className="demo-notice__cta">Create your own &rarr;</Link>
+        </div>
+      )}
+
       <header className="masthead">
-        <p className="masthead__eyebrow">A shared album</p>
+        <p className="masthead__eyebrow">{gallery.isDemo ? 'Demo gallery' : 'A shared album'}</p>
         <h1 className="masthead__title">{gallery.title}</h1>
-        <p className="masthead__sub">Every guest's view of the day, in one place.</p>
+        <p className="masthead__sub">Every guest&rsquo;s view of the day, in one place.</p>
       </header>
 
-      <UploadComposer slug={slug} uploadsClosed={uploadsClosed} />
+      {!gallery.isDemo && <UploadComposer slug={slug} uploadsClosed={uploadsClosed} />}
 
       {byPost.size === 0 ? (
         <div className="panel">
@@ -247,9 +254,6 @@ export default async function GalleryPage({
                       initialCount={likeCounts.get(post.postId) ?? 0}
                       initialLiked={guestLikedSet.has(post.postId)}
                     />
-                    {post.images.length > 0 && (
-                      <ShareButtons publicId={post.images[0].publicId} />
-                    )}
                   </div>
                   {isOwner && <DeletePostButton postId={post.postId} />}
                 </div>

@@ -172,7 +172,9 @@ export function DashboardClient({
                           Download all photos &amp; videos
                         </a>
                         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                          {!g.uploadsClosedAt && (
+                          {g.uploadsClosedAt ? (
+                            <ReopenUploadsButton galleryId={g.id} onReopened={load} />
+                          ) : (
                             <CloseUploadsButton galleryId={g.id} onClosed={load} />
                           )}
                           <button className="gcard__danger" onClick={() => setDeleteModal(g)}>
@@ -525,6 +527,36 @@ function DeleteGalleryModal({
         </div>
       </div>
     </div>
+  );
+}
+
+/* ---- reopen uploads for a gallery that has been closed ---- */
+function ReopenUploadsButton({
+  galleryId,
+  onReopened,
+}: {
+  galleryId: string;
+  onReopened: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+
+  async function reopen() {
+    setBusy(true);
+    await fetch(`/api/galleries/${galleryId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ uploadsClosedAt: null }),
+    });
+    onReopened();
+  }
+
+  return (
+    <span style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.78rem', color: 'var(--ink-soft)' }}>
+      <span>Uploads closed</span>
+      <button className="mod-btn" onClick={reopen} disabled={busy}>
+        {busy ? '…' : 'Reopen'}
+      </button>
+    </span>
   );
 }
 

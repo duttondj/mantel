@@ -67,8 +67,39 @@ export async function GET(
     }
   }
 
+  // Access control: images are only served as sub-resources within the gallery
+  // (img/video elements) or via the explicit download button. Direct navigation,
+  // shared links, and third-party embeds are all blocked.
+  const isDownload = req.nextUrl.searchParams.get('download') === '1';
+  const dest = req.headers.get('sec-fetch-dest');
+  const ua = (req.headers.get('user-agent') ?? '').toLowerCase();
+  const referer = req.headers.get('referer');
+  const appOrigin = new URL(process.env.APP_URL ?? 'http://localhost:13000').origin;
+
+  // 1. Block known embed crawlers (Discord, Slack, Telegram, etc.)
+  const embedBot = /discordbot|slackbot|twitterbot|telegrambot|facebookexternalhit|linkedinbot|whatsapp|iframely|embedly/;
+  if (embedBot.test(ua)) {
+    return new NextResponse(null, { status: 403 });
+  }
+
+  // 2. Block cross-origin referer (image embedded on a third-party site)
+  if (referer) {
+    try {
+      if (new URL(referer).origin !== appOrigin) {
+        return new NextResponse(null, { status: 403 });
+      }
+    } catch {
+      return new NextResponse(null, { status: 403 });
+    }
+  }
+
+  // 3. Block direct navigation — only img/video sub-resource loads or explicit downloads pass
+  if (!isDownload && dest !== 'image' && dest !== 'video') {
+    return NextResponse.redirect(`${appOrigin}/`, 302);
+  }
+
   // authorized — stream the object back, with Range support for video seeking
-  const download = req.nextUrl.searchParams.get('download') === '1';
+  const download = isDownload;
   if (download) {
     db.update(galleries)
       .set({ downloadCount: sql`${galleries.downloadCount} + 1` })

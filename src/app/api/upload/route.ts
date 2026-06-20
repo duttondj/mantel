@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { galleries, posts, images, user as userTable } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { stripAndStore, storeVideo } from '@/lib/images';
 import {
   verifyGalleryAccess,
@@ -148,6 +148,12 @@ export async function POST(req: NextRequest) {
     .insert(posts)
     .values({ galleryId: gallery.id, guestName, message })
     .returning();
+
+  // track last activity for auto-close cron (fire-and-forget)
+  db.update(galleries)
+    .set({ lastUploadAt: sql`now()` })
+    .where(eq(galleries.id, gallery.id))
+    .catch(() => {});
 
   const created = [];
   for (const s of stored) {

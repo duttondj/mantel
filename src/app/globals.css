@@ -145,20 +145,6 @@ a { color: inherit; }
 .like-btn__count { font-variant-numeric: tabular-nums; }
 
 /* --- share controls --- */
-.share { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0; }
-.share__btn {
-  font-family: var(--body);
-  font-size: 0.72rem;
-  letter-spacing: 0.04em;
-  padding: 0.35rem 0.6rem;
-  border: 1px solid var(--line);
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 999px;
-  cursor: pointer;
-  text-decoration: none;
-}
-.share__btn:hover { border-color: var(--rose); color: var(--rose-deep); }
 
 /* --- forms (unlock + upload + promo) --- */
 .panel {
@@ -1088,3 +1074,50 @@ a { color: inherit; }
   margin-top: 0.3rem;
   text-align: right;
 }
+
+.pricing-card {
+  max-width: 420px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 2rem 2.2rem;
+  text-align: center;
+}
+.pricing-card__price {
+  font-family: var(--display);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.2rem;
+  line-height: 1;
+}
+.pricing-card__per {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.pricing-card__desc {
+  font-size: 0.92rem;
+  color: var(--ink-soft);
+  margin: 0.75rem 0 1.6rem;
+  line-height: 1.5;
+}
+
+.demo-notice {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.demo-notice__cta {
+  font-weight: 600;
+  color: var(--rose);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.demo-notice__cta:hover { text-decoration: underline; }
