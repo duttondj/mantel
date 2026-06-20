@@ -43,6 +43,17 @@ docker run --rm \
   alpine tar czf "/backups/photos-$TIMESTAMP.tar.gz" -C /data .
 echo "[backup]   → $BACKUP_DIR/photos-$TIMESTAMP.tar.gz"
 
-echo "[backup] Done. Copy these files off the server to a safe location:"
-echo "         $BACKUP_DIR/db-$TIMESTAMP.sql.gz"
-echo "         $BACKUP_DIR/photos-$TIMESTAMP.tar.gz"
+echo "[backup] Done."
+
+# --- Retention: keep only the 3 most recent of each file type ---
+# Sorted newest-first; tail -n +4 prints everything after the 3rd entry.
+mapfile -t old_db     < <(ls -t "$BACKUP_DIR"/db-*.sql.gz     2>/dev/null | tail -n +4)
+mapfile -t old_photos < <(ls -t "$BACKUP_DIR"/photos-*.tar.gz 2>/dev/null | tail -n +4)
+old=("${old_db[@]}" "${old_photos[@]}")
+if [[ ${#old[@]} -gt 0 ]]; then
+  echo "[backup] Removing ${#old[@]} old backup file(s):"
+  for f in "${old[@]}"; do
+    echo "[backup]   rm $f"
+    rm -f "$f"
+  done
+fi
