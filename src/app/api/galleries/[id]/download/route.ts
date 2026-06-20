@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PassThrough, Readable } from 'node:stream';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import { db } from '@/db';
 import { galleries, posts, images } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -37,9 +37,9 @@ export async function GET(
   const safeTitle = gallery.title.replace(/[^a-z0-9\-_ ]/gi, '').trim() || 'gallery';
 
   const pass = new PassThrough();
-  const archive = archiver('zip', { zlib: { level: 1 } });
+  const archive = new ZipArchive({ zlib: { level: 1 } });
 
-  archive.on('error', (err) => {
+  archive.on('error', (err: Error) => {
     console.error('Archive error:', err);
     pass.destroy(err);
   });

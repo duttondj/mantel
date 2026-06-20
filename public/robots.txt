@@ -1,0 +1,8 @@
+User-agent: *
+# Gallery pages are private — guests' photos should not be indexed
+Disallow: /g/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /api/
+
+Allow: /

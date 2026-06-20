@@ -1,5 +1,36 @@
+const securityHeaders = [
+  // Prevent MIME-type sniffing
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  // Block the site from being framed (clickjacking)
+  { key: 'X-Frame-Options', value: 'DENY' },
+  // Don't send the full URL as referer to other origins
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  // Disable browser features we never use
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  // CSP: lock down what can run/load on our pages.
+  // script-src needs 'unsafe-inline' because Next.js injects inline hydration scripts.
+  // media-src allows https: so presigned cloud-storage URLs work regardless of provider.
+  {
+    key: 'Content-Security-Policy',
+    value: [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob:",
+      "media-src 'self' blob: https:",
+      "connect-src 'self'",
+      "font-src 'self'",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ].join('; '),
+  },
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  poweredByHeader: false,
   // standalone build = small Docker image, only ships what's needed to run
   output: 'standalone',
   experimental: {
@@ -22,6 +53,9 @@ const nextConfig = {
   // traced output for the upload route that does the decoding.
   outputFileTracingIncludes: {
     '/api/upload': ['./node_modules/libheif-js/**/*'],
+  },
+  async headers() {
+    return [{ source: '/(.*)', headers: securityHeaders }];
   },
 };
 

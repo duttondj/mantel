@@ -2,5 +2,13 @@
 	tls {
 		dns cloudflare {$CF_API_TOKEN}
 	}
-	reverse_proxy app:3000
+
+	# Tell browsers to always use HTTPS for this domain for 1 year
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+	reverse_proxy app:3000 {
+		# Overwrite (not append) X-Forwarded-For so clients can't spoof it
+		# and bypass the app's IP-based rate limiting.
+		header_up X-Forwarded-For {remote_host}
+	}
 }

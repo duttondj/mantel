@@ -19,17 +19,19 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get('x-square-hmacsha256-signature') ?? '';
   const signatureKey = process.env.SQUARE_WEBHOOK_SECRET ?? '';
 
-  if (signatureKey) {
-    const valid = await WebhooksHelper.verifySignature({
-      requestBody: body,
-      signatureHeader: signature,
-      signatureKey,
-      notificationUrl: WEBHOOK_URL,
-    });
-    if (!valid) {
-      console.warn('[square] webhook signature invalid');
-      return new NextResponse('Forbidden', { status: 403 });
-    }
+  if (!signatureKey) {
+    console.error('[square] SQUARE_WEBHOOK_SECRET is not set — rejecting webhook to prevent forged payment events');
+    return new NextResponse('Forbidden', { status: 403 });
+  }
+  const valid = await WebhooksHelper.verifySignature({
+    requestBody: body,
+    signatureHeader: signature,
+    signatureKey,
+    notificationUrl: WEBHOOK_URL,
+  });
+  if (!valid) {
+    console.warn('[square] webhook signature invalid');
+    return new NextResponse('Forbidden', { status: 403 });
   }
 
   let event: Record<string, unknown>;

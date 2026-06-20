@@ -85,8 +85,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD}
     ports:
-      - '0.0.0.0:19000:9000'
-      - '0.0.0.0:19001:9001'
+      - '127.0.0.1:19000:9000'
+      - '127.0.0.1:19001:9001'
     volumes:
       - minio_data:/data
     healthcheck:
