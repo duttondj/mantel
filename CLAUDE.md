@@ -10,19 +10,24 @@ unlock a gallery.
 
 - Dev: `npm run dev` (needs a reachable Postgres — easiest via the db container)
 - Build: `npm run build`  ·  Typecheck: `npx tsc --noEmit`
-- Full stack (LAN): `docker compose up -d --build`
-- Full stack (internet, Cloudflare Tunnel): `docker compose -f docker-compose.yml -f docker-compose.tunnel.yml up -d --build`
-- DB setup, ONCE per database, AFTER the stack is up:
-  - `docker compose exec app npm run db:migrate`
-  - `docker compose exec app npm run db:seed`
-- Regenerate migration after a schema change: `npx drizzle-kit generate`
-- Purge expired data (dry-run by default): `npm run purge` / add `--commit` to delete
+- **Preferred deploy shortcuts (use these):**
+  - `make up` — build + start full stack with Cloudflare Tunnel
+  - `make down` / `make restart` / `make logs` / `make ps`
+  - `make migrate` — run pending DB migrations
+  - `make seed` — seed initial promo codes
+  - `make seed-demo` — populate the demo gallery (`/g/demo`) with photos + fake posts
+  - `make purge` / `make purge-commit` — dry-run / commit data purge
+  - `make remind` — send expiry reminder emails manually
+- Raw compose (LAN only, no tunnel): `docker compose up -d --build`
+- Regenerate migration after schema change: `npx drizzle-kit generate`
 
 ## Stack
 
 Next.js 15 (App Router) · Postgres + Drizzle ORM · MinIO (S3-compatible) for
 images · Better Auth (email/password, sessions in Postgres) for hosts · sharp +
-heic-convert for image processing. All self-hosted in Docker; no external SaaS.
+heic-convert for image processing · Square for payments · Resend for email ·
+node-cron for scheduled tasks. All self-hosted in Docker; no external SaaS
+except Square and Resend.
 
 ## Architecture decisions (the non-obvious "why"s — do not undo these)
 
@@ -36,18 +41,26 @@ heic-convert for image processing. All self-hosted in Docker; no external SaaS.
   every request and redirects locked-gallery images to the password prompt. A
   leaked direct link must reveal nothing and unlock nothing. Don't "simplify"
   this by serving images directly from storage.
+- **Direct image URL access is intentionally blocked.** The image route uses
+  `Sec-Fetch-Dest` to allow only `image`/`video` sub-resource loads (gallery
+  `<img>`/`<video>` elements) and explicit `?download=1` requests. Direct
+  navigation, shared links, and third-party embeds redirect to the home page.
+  This is deliberate — Mantel is not an image host.
 - **EXIF stripping must stay server-side and never be trusted to the client.**
   In `src/lib/images.ts`. `.rotate()` MUST run before metadata is dropped, or
   portrait phone photos come out sideways (orientation lives in the EXIF we
   delete). Verified end-to-end; don't reorder.
 - **Entitlement is decoupled from payment.** Everything flows through
-  `grantAccess()` in `src/lib/entitlements.ts`. Promo redemption calls it today;
-  Stripe will call the same function later. Galleries only read `status` +
-  `expiresAt`. Don't scatter payment logic elsewhere.
+  `grantAccess()` in `src/lib/entitlements.ts`. Square and promo codes both
+  call it. Galleries only read `status` + `expiresAt`. Don't scatter payment
+  logic elsewhere.
 - **Deletion is staged and irreversible-by-design-last.** Expiry cuts off
   access immediately (via `isEntitled()` in the request path); the purge script
   only physically deletes after a 30-day grace period, and dry-runs unless
   `--commit`. Don't make expiry directly delete.
+- **Demo gallery is read-only by design.** The `isDemo` flag on a gallery hides
+  the upload composer entirely (server-side) and `uploadsClosedAt` is set so
+  the API also rejects uploads. Both layers are needed.
 
 ## Gotchas (these cost real debugging time — keep them in place)
 
@@ -63,7 +76,8 @@ heic-convert for image processing. All self-hosted in Docker; no external SaaS.
 - **`APP_URL` must match how the browser actually reaches the app** (LAN IP+port
   for LAN, `https://domain` for the tunnel). Better Auth validates against it
   and QR/share links are built from it. Wrong value = broken auth or QR codes
-  pointing nowhere. Most common deploy mistake.
+  pointing nowhere. Most common deploy mistake. Also used by the image route to
+  construct the redirect target — wrong value = broken redirects.
 - **`secure` cookies need HTTPS** — they don't function over plain-HTTP LAN.
   They start working once behind the Cloudflare Tunnel.
 - **Ports are in the 10000+ range** (app 13000, MinIO 19000/19001) to avoid
@@ -71,6 +85,9 @@ heic-convert for image processing. All self-hosted in Docker; no external SaaS.
   still standard (app 3000, minio 9000).
 - **MinIO bucket isn't auto-created** — the one-shot `createbucket` service in
   compose handles it. First upload fails without it.
+- **`durationDays: null` means lifetime access** in `promoCodes`. `isEntitled`
+  returns true when `expiresAt === null` — don't add a null check that inverts
+  this. The `***REMOVED***` promo code uses this path.
 
 ## Conventions
 
@@ -78,12 +95,9 @@ heic-convert for image processing. All self-hosted in Docker; no external SaaS.
   wedding-specific, even though weddings are the main target.
 - Limits live in one place: rate limits in `src/lib/rate-limit.ts`, upload caps
   (5 photos, 180-char message) as constants in the upload route.
-- Prefer prose/markdown deliverables; this is a single-container self-host MVP,
-  so favor simple in-process solutions over new services (e.g. rate limiting is
-  an in-memory Map, not Redis — deliberately).
-
-## Known next steps (not yet built)
-
-Host email (verification + password reset — reset causes lockouts without it) ·
-Stripe checkout+webhook against `grantAccess` · scheduling the purge job ·
-volume backups before a real event relies on it.
+- Prefer simple in-process solutions over new services (rate limiting is an
+  in-memory Map, scheduled tasks use node-cron in `src/instrumentation.ts`).
+- Cron jobs run in-process via `src/instrumentation.ts` (Next.js `register()`):
+  2am auto-close idle galleries · 3am purge expired data · 9am expiry reminders.
+- All task logic lives in `src/lib/tasks/` as exported functions so they can be
+  called both from cron and from CLI scripts in `scripts/`.
