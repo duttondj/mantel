@@ -92,7 +92,9 @@ export function DashboardClient({
             </span>
           </div>
         )}
-        {!active ? (
+        {!active && paymentBanner ? (
+          <PaymentProcessingPanel />
+        ) : !active ? (
           <ActivatePanel onActivated={() => router.refresh()} />
         ) : (
           <>
@@ -206,6 +208,22 @@ export function DashboardClient({
         />
       )}
     </>
+  );
+}
+
+/* ---- shown when redirected back from Square before webhook fires ---- */
+function PaymentProcessingPanel() {
+  const router = useRouter();
+  useEffect(() => {
+    const t = setTimeout(() => router.refresh(), 3000);
+    return () => clearTimeout(t);
+  }, [router]);
+
+  return (
+    <div className="panel" style={{ margin: '2rem auto', textAlign: 'center' }}>
+      <h2>Completing your purchase…</h2>
+      <p style={{ color: 'var(--ink-soft)' }}>Confirming your payment with Square. This takes just a moment.</p>
+    </div>
   );
 }
 

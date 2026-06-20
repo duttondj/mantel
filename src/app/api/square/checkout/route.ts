@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
     checkoutOptions: {
       redirectUrl: `${APP_URL}/dashboard?payment=success`,
     },
+    // paymentNote is copied onto the Payment object — used as fallback
+    // to identify the user if order.referenceId isn't preserved.
+    paymentNote: session.user.id,
   });
 
   const url = res.paymentLink?.url;
