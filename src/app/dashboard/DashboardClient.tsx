@@ -37,6 +37,7 @@ export function DashboardClient({
   const [showCreate, setShowCreate] = useState(false);
   const [pwModal, setPwModal] = useState<Gallery | null>(null);
   const [deleteModal, setDeleteModal] = useState<Gallery | null>(null);
+  const [showChangePw, setShowChangePw] = useState(false);
 
   useEffect(() => setOrigin(window.location.origin), []);
 
@@ -82,6 +83,7 @@ export function DashboardClient({
         <a className="topbar__brand" href="/dashboard">Mantel</a>
         <div className="topbar__right">
           <span className="topbar__email">{email}</span>
+          <button className="linkbtn" onClick={() => setShowChangePw(true)}>Change password</button>
           <button className="linkbtn" onClick={handleSignOut}>Sign out</button>
         </div>
       </div>
@@ -186,6 +188,10 @@ export function DashboardClient({
           </>
         )}
       </div>
+
+      {showChangePw && (
+        <ChangePasswordModal onClose={() => setShowChangePw(false)} />
+      )}
 
       {showCreate && (
         <CreateModal
@@ -561,5 +567,79 @@ function CloseUploadsButton({
         No
       </button>
     </span>
+  );
+}
+
+/* ---- change password modal ---- */
+function ChangePasswordModal({ onClose }: { onClose: () => void }) {
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [done, setDone] = useState(false);
+
+  async function submit() {
+    if (!current || !next) { setError('Fill in all fields.'); return; }
+    if (next.length < 8) { setError('New password must be at least 8 characters.'); return; }
+    if (next !== confirm) { setError('Passwords do not match.'); return; }
+    setBusy(true);
+    setError('');
+    const res = await fetch('/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentPassword: current, newPassword: next, revokeOtherSessions: false }),
+    });
+    if (res.ok) {
+      setDone(true);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setError((d as { message?: string }).message || 'Could not change password. Check your current password and try again.');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="modal-bg" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h3>Change password</h3>
+        {done ? (
+          <>
+            <p style={{ color: 'var(--ink-soft)' }}>Your password has been updated.</p>
+            <div className="modal__row">
+              <button className="btn btn--sm" onClick={onClose}>Done</button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="field">
+              <label htmlFor="cpw-cur">Current password</label>
+              <input id="cpw-cur" type="password" value={current} onChange={(e) => setCurrent(e.target.value)} autoFocus />
+            </div>
+            <div className="field">
+              <label htmlFor="cpw-new">New password</label>
+              <input id="cpw-new" type="password" value={next} onChange={(e) => setNext(e.target.value)} />
+            </div>
+            <div className="field">
+              <label htmlFor="cpw-confirm">Confirm new password</label>
+              <input
+                id="cpw-confirm"
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submit()}
+              />
+            </div>
+            {error && <p className="err">{error}</p>}
+            <div className="modal__row">
+              <button className="btn btn--ghost btn--sm" onClick={onClose} disabled={busy}>Cancel</button>
+              <button className="btn btn--sm" onClick={submit} disabled={busy}>
+                {busy ? 'Saving…' : 'Update password'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
