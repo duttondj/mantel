@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   const year = new Date().getFullYear();
   const priceCents = parseInt(process.env.SQUARE_PRICE_CENTS ?? '2000', 10);
@@ -22,7 +24,7 @@ export default function Home() {
             photos — no app, no sign-up, just a link.
           </p>
           <div style={{ marginTop: '1.8rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <Link className="btn btn--sm" href="/signin" style={{ display: 'inline-block' }}>
+            <Link className="btn btn--sm" href="/signin?mode=signup" style={{ display: 'inline-block' }}>
               Get started
             </Link>
             <Link className="btn btn--sm btn--ghost" href="/g/demo" style={{ display: 'inline-block' }}>
@@ -78,7 +80,7 @@ export default function Home() {
           <div className="pricing-card">
             <p className="pricing-card__price">{priceDisplay}<span className="pricing-card__per"> / year</span></p>
             <p className="pricing-card__desc">One year of private gallery hosting for your event — unlimited guests, unlimited uploads.</p>
-            <Link className="btn btn--sm" href="/signin" style={{ display: 'inline-block' }}>
+            <Link className="btn btn--sm" href="/signin?mode=signup" style={{ display: 'inline-block' }}>
               Get started
             </Link>
           </div>
