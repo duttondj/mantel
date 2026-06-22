@@ -61,6 +61,23 @@ export default function PrivacyPage() {
           </li>
         </ul>
 
+        <h2>Payments</h2>
+        <p>
+          Payments are processed by Square. Mantel never receives or stores your card number,
+          billing address, or any other payment details — those are handled exclusively by Square
+          and subject to{' '}
+          <a href="https://squareup.com/us/en/legal/general/privacy" target="_blank" rel="noopener noreferrer">
+            Square&apos;s privacy policy
+          </a>
+          .
+        </p>
+        <p>
+          When a payment completes, Square notifies Mantel via a webhook. The only information
+          Mantel extracts from that notification is confirmation that payment succeeded and the
+          user ID associated with the purchase, solely in order to activate the host&apos;s
+          account. No payment contact information is stored by Mantel.
+        </p>
+
         <h2>What is not collected</h2>
         <p>
           There are no analytics scripts, no advertising trackers, and no third-party code

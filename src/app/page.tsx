@@ -89,7 +89,11 @@ export default function Home() {
       <footer className="site-footer">
         <span>© {year} Mantel</span>
         <span className="site-footer__sep">·</span>
-        <Link href="/privacy" className="site-footer__link">Privacy policy</Link>
+        <Link href="/privacy" className="site-footer__link">Privacy</Link>
+        <span className="site-footer__sep">·</span>
+        <Link href="/terms" className="site-footer__link">Terms</Link>
+        <span className="site-footer__sep">·</span>
+        <a href="mailto:admin@mantel.wedding" className="site-footer__link">Contact</a>
       </footer>
     </>
   );
