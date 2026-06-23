@@ -12,8 +12,28 @@ export default function Home() {
     maximumFractionDigits: 0,
   }).format(priceCents / 100);
 
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: 'Mantel',
+    url: 'https://mantel.wedding',
+    description:
+      'Create a private photo gallery for your wedding, party, or event. Guests add photos instantly — no app, no sign-up, just a link or QR code.',
+    applicationCategory: 'PhotographyApplication',
+    operatingSystem: 'Web',
+    offers: {
+      '@type': 'Offer',
+      price: (priceCents / 100).toFixed(2),
+      priceCurrency: 'USD',
+    },
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="wrap">
         {/* Hero */}
         <header className="masthead">
