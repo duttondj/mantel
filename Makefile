@@ -15,9 +15,6 @@ logs:
 migrate:
 	$(COMPOSE) exec app npm run db:migrate
 
-seed:
-	$(COMPOSE) exec app npm run db:seed
-
 seed-demo:
 	$(COMPOSE) exec app npm run seed:demo
 
@@ -39,4 +36,4 @@ migrate-storage-commit:
 ps:
 	$(COMPOSE) ps
 
-.PHONY: up down restart logs migrate seed seed-demo purge purge-commit remind migrate-storage migrate-storage-commit ps
+.PHONY: up down restart logs migrate seed-demo purge purge-commit remind migrate-storage migrate-storage-commit ps

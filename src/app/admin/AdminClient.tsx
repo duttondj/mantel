@@ -452,7 +452,7 @@ function PromoSection({ codes, onReload }: { codes: PromoCode[]; onReload: () =>
               <input
                 value={newCode}
                 onChange={(e) => setNewCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
-                placeholder="e.g. ***REMOVED***"
+                placeholder="e.g. WELCOME-2026"
                 autoFocus
               />
             </div>

@@ -27,12 +27,21 @@ export default async function DashboardPage() {
 
   const active = me ? isEntitled(me) : false;
 
+  const priceCents = parseInt(process.env.SQUARE_PRICE_CENTS ?? '2000', 10);
+  const priceDisplay = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(priceCents / 100);
+
   return (
     <DashboardClient
       email={me?.email ?? ''}
       active={active}
       plan={me?.plan ?? 'free'}
       expiresAt={me?.expiresAt ? me.expiresAt.toISOString() : null}
+      priceDisplay={priceDisplay}
     />
   );
 }

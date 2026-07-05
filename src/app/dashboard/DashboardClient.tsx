@@ -21,11 +21,13 @@ export function DashboardClient({
   active,
   plan,
   expiresAt,
+  priceDisplay,
 }: {
   email: string;
   active: boolean;
   plan: string;
   expiresAt: string | null;
+  priceDisplay: string;
 }) {
   const router = useRouter();
   const [galleries, setGalleries] = useState<Gallery[]>([]);
@@ -99,7 +101,7 @@ export function DashboardClient({
         {!active && paymentBanner ? (
           <PaymentProcessingPanel />
         ) : !active ? (
-          <ActivatePanel onActivated={() => router.refresh()} />
+          <ActivatePanel priceDisplay={priceDisplay} onActivated={() => router.refresh()} />
         ) : (
           <>
             <div className="banner">
@@ -254,7 +256,7 @@ function PaymentProcessingPanel() {
 }
 
 /* ---- account activation — purchase or promo code ---- */
-function ActivatePanel({ onActivated }: { onActivated: () => void }) {
+function ActivatePanel({ priceDisplay, onActivated }: { priceDisplay: string; onActivated: () => void }) {
   const [code, setCode] = useState('');
   const [promoError, setPromoError] = useState('');
   const [promoBusy, setPromoBusy] = useState(false);
@@ -302,7 +304,7 @@ function ActivatePanel({ onActivated }: { onActivated: () => void }) {
       <p>Get a year of Mantel hosting — create unlimited galleries, share with all your guests.</p>
 
       <button className="btn" style={{ width: '100%', marginBottom: '0.5rem' }} onClick={buy} disabled={buyBusy}>
-        {buyBusy ? 'Redirecting to checkout…' : 'Purchase 1 year — $20'}
+        {buyBusy ? 'Redirecting to checkout…' : `Purchase 1 year — ${priceDisplay}`}
       </button>
       {buyError && <p className="err">{buyError}</p>}
 

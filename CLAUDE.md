@@ -14,7 +14,6 @@ unlock a gallery.
   - `make up` — build + start full stack (Caddy + DDNS + app)
   - `make down` / `make restart` / `make logs` / `make ps`
   - `make migrate` — run pending DB migrations
-  - `make seed` — seed initial promo codes
   - `make seed-demo` — populate the demo gallery (`/g/demo`) with photos + fake posts
   - `make purge` / `make purge-commit` — dry-run / commit data purge
   - `make remind` — send expiry reminder emails manually
@@ -50,10 +49,11 @@ except Square and Resend.
   In `src/lib/images.ts`. `.rotate()` MUST run before metadata is dropped, or
   portrait phone photos come out sideways (orientation lives in the EXIF we
   delete). Verified end-to-end; don't reorder.
-- **Entitlement is decoupled from payment.** Everything flows through
-  `grantAccess()` in `src/lib/entitlements.ts`. Square and promo codes both
-  call it. Galleries only read `status` + `expiresAt`. Don't scatter payment
-  logic elsewhere.
+- **Entitlement is decoupled from payment.** It all lives in one seam,
+  `src/lib/entitlements.ts`. The Square webhook calls `grantAccess()`; promo
+  redemption (`redeemPromoCode()`) applies the identical `status`/`expiresAt`
+  update inside its own transaction. Galleries only read `status` +
+  `expiresAt`. Don't scatter payment logic elsewhere.
 - **Deletion is staged and irreversible-by-design-last.** Expiry cuts off
   access immediately (via `isEntitled()` in the request path); the purge script
   only physically deletes after a 30-day grace period, and dry-runs unless
@@ -83,7 +83,9 @@ except Square and Resend.
   compose handles it. First upload fails without it.
 - **`durationDays: null` means lifetime access** in `promoCodes`. `isEntitled`
   returns true when `expiresAt === null` — don't add a null check that inverts
-  this. The `***REMOVED***` promo code uses this path.
+  this. A promo code created with the "Forever" option in the admin dashboard
+  uses this path. (No promo codes are seeded or hardcoded — they're created
+  only from the admin dashboard.)
 
 ## Conventions
 

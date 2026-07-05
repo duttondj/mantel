@@ -5,9 +5,11 @@ import { eq, sql } from 'drizzle-orm';
 /*
  * THE ENTITLEMENT SEAM.
  *
- * grantAccess() is the single function that activates a couple's year of
- * hosting. Promo redemption calls it today. When you add Stripe later,
- * the webhook handler calls this SAME function with { plan: 'paid' } and
+ * grantAccess() is the single function that activates a host's year of
+ * hosting. The Square webhook calls it with { plan: 'paid' }. Promo
+ * redemption grants access through the same seam (see redeemPromoCode
+ * below, which applies the identical status/expiry update inside its
+ * transaction). Any future payment provider hits this same function and
  * nothing else in the app needs to change.
  */
 export async function grantAccess(

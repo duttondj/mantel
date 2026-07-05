@@ -17,13 +17,14 @@ general-purpose image hosting.
 - Edit or add a caption to any guest post
 - View gallery stats (views and downloads)
 - Change password from the dashboard; full forgot-password / reset flow
-- Activate via promo code or Square payment ($20 / year)
+- Activate via promo code or Square payment ($20 / year by default, set via `SQUARE_PRICE_CENTS`)
 
 **For guests**
 - Post 1–5 photos or videos with an optional name and 180-char message
 - Text-only guestbook posts (no photo required)
 - Like posts; see an upload progress bar
-- View everything in a lightbox with fullscreen slideshow and swipe support
+- View everything in a full-screen lightbox with slideshow and keyboard
+  navigation; swipe through multi-photo posts in the feed
 
 **Privacy**
 - All EXIF/GPS/camera metadata stripped server-side on upload — always
@@ -35,7 +36,8 @@ general-purpose image hosting.
 
 **Admin**
 - Admin dashboard at `/admin` (flagged per-user in the DB)
-- Manage all host accounts: activate, expire, reset password via email
+- Manage all host accounts: activate/deactivate, reset password via email,
+  grant/revoke admin, add and delete accounts
 - Create, toggle, and delete promo codes (1-year or lifetime, limited or unlimited uses)
 
 **Automated**
@@ -48,11 +50,12 @@ general-purpose image hosting.
 cp .env.example .env   # fill in secrets (see comments in the file)
 make up                # build + start everything
 make migrate           # run once after first boot (creates tables)
-make seed              # run once after migrate (creates sample promo codes)
 make seed-demo         # optional: populate the /g/demo gallery for marketing
 ```
 
-Seeded promo codes: `***REMOVED***` (25 uses, 1 year) and `***REMOVED***` (unlimited, lifetime).
+Create your first admin with `npm run db:create-admin` (run inside the app
+container). Promo codes are created and managed from the admin dashboard —
+none are seeded or hardcoded.
 
 ### Makefile shortcuts
 
@@ -63,7 +66,6 @@ Seeded promo codes: `***REMOVED***` (25 uses, 1 year) and `***REMOVED***` (unlim
 | `make restart` | Restart the app container only |
 | `make logs` | Tail app logs |
 | `make migrate` | Run pending DB migrations |
-| `make seed` | Seed initial promo codes |
 | `make seed-demo` | Populate the demo gallery |
 | `make purge` | Dry-run data purge |
 | `make purge-commit` | Actually delete expired data |

@@ -154,7 +154,7 @@ export const likes = pgTable(
  * ------------------------------------------------------------------ */
 
 export const promoCodes = pgTable('promo_codes', {
-  // the code itself is the key, e.g. "***REMOVED***"
+  // the code itself is the key, e.g. "WELCOME-2026"
   code: text('code').primaryKey(),
   // what redeeming grants — usually 'comped' for friends & family
   grantsPlan: text('grants_plan').notNull().default('comped'),

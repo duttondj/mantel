@@ -5,8 +5,8 @@ import { checkRateLimit, RULES } from '@/lib/rate-limit';
 
 /*
  * POST /api/promo/redeem  { code }
- * Requires a logged-in host. Activates their year of hosting via the
- * shared grantAccess seam. Stripe will later hit that same seam.
+ * Requires a logged-in host. Activates their hosting through the same
+ * entitlement seam as Square (see redeemPromoCode in lib/entitlements).
  */
 const MESSAGES: Record<string, string> = {
   not_found: "We couldn't find that code.",
