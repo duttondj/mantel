@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/db';
 import * as schema from '@/db/schema';
+import { randomBytes } from 'node:crypto';
 import { sendPasswordResetEmail, sendVerificationEmail } from './email';
 
 /*
@@ -12,6 +13,26 @@ import { sendPasswordResetEmail, sendVerificationEmail } from './email';
  * Guests never touch this; they use the separate signed-cookie system in
  * lib/gallery-auth.ts.
  */
+// The session-signing secret must come from the environment. If it's missing
+// at runtime, session cookies would be forgeable, so we fail fast rather than
+// fall back to any baked-in value. Env vars aren't injected during
+// `next build`, so a random throwaway (never persisted — nothing is signed at
+// build time) is allowed ONLY in the build phase.
+function resolveAuthSecret(): string {
+  const secret = process.env.BETTER_AUTH_SECRET ?? process.env.SESSION_SECRET;
+  if (secret) return secret;
+
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return randomBytes(32).toString('hex');
+  }
+
+  throw new Error(
+    'BETTER_AUTH_SECRET (or SESSION_SECRET) is not set. Refusing to start ' +
+      'without a signing secret — session cookies would be forgeable. ' +
+      'Set it to a long random value (e.g. `openssl rand -hex 32`).'
+  );
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -46,10 +67,7 @@ export const auth = betterAuth({
     max: 100, // generous global ceiling; sign-in has its own tighter rule
     storage: 'memory',
   },
-  // build-time fallback silences the warning during `next build` (env vars
-  // aren't injected at build time); real secrets are always present at runtime
-  secret: process.env.BETTER_AUTH_SECRET ?? process.env.SESSION_SECRET
-    ?? 'b7Kp3Mn8Qr2Vs6Xw4Yz9Aa1Bb5Cc0Dd7Ee3Ff8Gg2Hh6Ii4Jj9Kk1Ll5Mm0Nn7Pp',
+  secret: resolveAuthSecret(),
   baseURL: process.env.APP_URL || 'http://localhost:13000',
 });
 
