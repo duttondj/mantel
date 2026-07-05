@@ -9,8 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY package*.json ./
+# npm ci is faster and deterministic (installs straight from the lockfile);
+# skip audit/fund network round-trips and reuse cached tarballs from the mount
 RUN --mount=type=cache,target=/root/.npm \
-    npm install
+    npm ci --prefer-offline --no-audit --no-fund
 
 COPY . .
 RUN --mount=type=cache,target=/app/.next/cache \

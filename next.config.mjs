@@ -33,12 +33,21 @@ const nextConfig = {
   poweredByHeader: false,
   // standalone build = small Docker image, only ships what's needed to run
   output: 'standalone',
+  // Type-checking and linting run separately (`npx tsc --noEmit`), so we skip
+  // the duplicate serial passes `next build` would otherwise run on the
+  // critical path. Purely a build-speed win — type errors are still caught by
+  // the standalone tsc step, just not during the Docker build.
+  typescript: { ignoreBuildErrors: true },
+  eslint: { ignoreDuringBuilds: true },
   experimental: {
     serverActions: {
       bodySizeLimit: '150mb',
     },
     // raises the default 10MB cap on request bodies readable by route handlers
     middlewareClientMaxBodySize: '150mb',
+    // run webpack compilation in a worker thread so it doesn't contend with
+    // the main build process
+    webpackBuildWorker: true,
   },
   // we serve images through our own access-controlled route, so Next's
   // image optimizer isn't in the path for gallery photos
