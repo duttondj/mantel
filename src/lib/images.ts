@@ -1,7 +1,14 @@
 import sharp from 'sharp';
 import convert from 'heic-convert';
 import { nanoid } from 'nanoid';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
+import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { putObject } from './storage.ts';
+
+const execFileAsync = promisify(execFile);
 
 /*
  * Strip ALL metadata (EXIF, GPS/location, camera info) by re-encoding
@@ -33,8 +40,20 @@ function isHeic(buf: Buffer): boolean {
   return ['heic', 'heix', 'heif', 'mif1', 'hevc', 'hevx'].includes(brand);
 }
 
-// Videos are stored as-is — no metadata stripping (no ffmpeg in this stack).
-// mimeType must be one of the accepted video/* types from the upload route.
+/*
+ * Videos: strip ALL container metadata (including GPS/location — which iPhones
+ * embed in moov as an ISO-6709 string) before storing. We use ffmpeg with a
+ * stream copy (`-c copy`), so it's a fast remux, NOT a re-encode — no quality
+ * loss and low CPU.
+ *
+ * ffmpeg needs seekable files for the mp4/mov muxer (it writes the moov atom
+ * with seek-backs and can't do that on a pipe), so we round-trip through a
+ * temp dir rather than piping stdin/stdout. If ffmpeg fails we throw, so the
+ * upload route skips the file rather than storing an un-stripped video — a
+ * GPS leak must never fall through.
+ *
+ * mimeType must be one of the accepted video/* types from the upload route.
+ */
 export async function storeVideo(
   input: Buffer,
   mimeType: string
@@ -42,8 +61,30 @@ export async function storeVideo(
   const ext = mimeType === 'video/mp4' ? 'mp4' : mimeType === 'video/webm' ? 'webm' : 'mov';
   const publicId = nanoid();
   const storageKey = `vid/${publicId}.${ext}`;
-  await putObject(storageKey, input, mimeType);
-  return { storageKey, publicId, fileSize: input.length };
+
+  const dir = await mkdtemp(join(tmpdir(), 'mantel-vid-'));
+  const inPath = join(dir, `in.${ext}`);
+  const outPath = join(dir, `out.${ext}`);
+  try {
+    await writeFile(inPath, input);
+    await execFileAsync(
+      'ffmpeg',
+      [
+        '-y',
+        '-i', inPath,
+        '-map_metadata', '-1', // drop all global/container metadata (GPS lives here)
+        '-map_chapters', '-1', // drop chapters too
+        '-c', 'copy',          // remux only, no re-encode
+        outPath,
+      ],
+      { maxBuffer: 16 * 1024 * 1024 },
+    );
+    const cleaned = await readFile(outPath);
+    await putObject(storageKey, cleaned, mimeType);
+    return { storageKey, publicId, fileSize: cleaned.length };
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 }
 
 export async function stripAndStore(

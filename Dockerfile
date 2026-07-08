@@ -22,9 +22,10 @@ RUN --mount=type=cache,target=/app/.next/cache \
 FROM node:22-slim AS run
 WORKDIR /app
 
-# runtime only needs the libvips shared lib, not the -dev headers
+# runtime needs the libvips shared lib (for sharp) and ffmpeg (to strip
+# metadata/GPS out of uploaded videos before they hit storage)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libvips ca-certificates \
+    libvips ffmpeg ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
