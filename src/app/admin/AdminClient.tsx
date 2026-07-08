@@ -44,6 +44,14 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function fmtDaysLeft(expiresAt: string | null): string {
+  if (expiresAt === null) return '∞';
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return 'Expired';
+  const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
+  return `${days} day${days === 1 ? '' : 's'}`;
+}
+
 export function AdminClient({
   currentUserId,
   initialUsers,
@@ -206,7 +214,7 @@ export function AdminClient({
                 <th>Status</th>
                 <th>Plan</th>
                 <th>Galleries</th>
-                <th>Joined</th>
+                <th>Days left</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -222,7 +230,7 @@ export function AdminClient({
                   </td>
                   <td>{u.plan}</td>
                   <td>{u.galleryCount}</td>
-                  <td>{fmtDate(u.createdAt)}</td>
+                  <td>{fmtDaysLeft(u.expiresAt)}</td>
                   <td>
                     <div className="admin-actions">
                       <button
