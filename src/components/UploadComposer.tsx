@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { canStripInBrowser, stripImageMetadata } from '@/lib/client-image';
 
 const MAX_FILES = 5;
 const MAX_MESSAGE = 180;
@@ -100,16 +101,32 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
     }
     setBusy(true);
     setError('');
-    setProgress(0);
+    setProgress(null); // show "Processing…" while we strip metadata locally
 
     const fd = new FormData();
     fd.set('slug', slug);
     fd.set('message', message.trim());
     fd.set('guestName', name.trim());
-    previews.forEach((p) => fd.append('files', p.file));
 
     try {
+      // Strip EXIF/GPS in the browser before upload. Canvas-decodable images
+      // (JPEG/PNG/WebP) are re-encoded metadata-free here; HEIC and videos
+      // can't be decoded in a canvas, so they pass through unchanged and the
+      // server strips them as a backstop.
+      for (const p of previews) {
+        let file = p.file;
+        if (canStripInBrowser(p.file)) {
+          try {
+            file = await stripImageMetadata(p.file);
+          } catch {
+            file = p.file; // canvas failed — let the server-side strip handle it
+          }
+        }
+        fd.append('files', file);
+      }
+
       await new Promise<void>((resolve, reject) => {
+        setProgress(0);
         const xhr = new XMLHttpRequest();
         xhr.upload.addEventListener('progress', (e) => {
           if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100));
@@ -189,7 +206,7 @@ export function UploadComposer({ slug, uploadsClosed }: { slug: string; uploadsC
               <input
                 ref={inputRef}
                 type="file"
-                accept="image/*,video/mp4,video/quicktime,video/webm"
+                accept="image/jpeg,image/png,video/mp4,video/quicktime,video/webm"
                 multiple
                 hidden
                 onChange={(e) => {
